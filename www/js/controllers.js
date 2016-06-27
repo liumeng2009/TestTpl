@@ -1,6 +1,7 @@
-angular.module('starter.controllers', [])
+angular.module('starter.controllers', ['loginControllers','regControllers'])
 
-.controller('DashCtrl', function($scope) {})
+.controller('DashCtrl', function($scope) {
+})
 
 .controller('ChatsCtrl', function($scope, Chats) {
   // With the new view caching in Ionic, Controllers are only called
@@ -10,7 +11,6 @@ angular.module('starter.controllers', [])
   //
   //$scope.$on('$ionicView.enter', function(e) {
   //});
-
   $scope.chats = Chats.all();
   $scope.remove = function(chat) {
     Chats.remove(chat);
@@ -26,9 +26,7 @@ angular.module('starter.controllers', [])
     enableFriends: true
   };
 })
-  .controller('LoginCtrl', function($scope) {
-    $scope.settings = {
-      enableFriends: true
-    };
+  .controller('RegCtrl',function($scope){
+
   })
 ;

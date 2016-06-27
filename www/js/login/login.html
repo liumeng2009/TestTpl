@@ -3,7 +3,7 @@
     <div class="list">
       <label class="item item-input">
         <i class="padding icon ion-person"></i>
-        <input type="text" placeholder="用户名">
+        <input type="text" placeholder="用户名" value="{{username}}">
       </label>
       <label class="item item-input">
         <i class="padding icon ion-unlocked"></i>
@@ -13,7 +13,7 @@
         记住我
       </ion-toggle>
       <button class="button button-full button-positive" ng-click="login()">
-        登录
+        登录{{hideHeader}}
       </button>
     </div>
   </ion-content>

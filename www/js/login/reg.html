@@ -1,0 +1,26 @@
+<ion-view view-title="注册用户">
+  <ion-content>
+    <form role="form" name="myForm">
+      <div class="list list-inset">
+        <label class="item item-input">
+          <i class="padding icon ion-person"></i>
+          <input type="text" placeholder="6-12位的用户名" required ng-minlength="6" ng-maxlength="12" ng-model="user.username" name="username" id="username">
+          <i class="ion-close-round padding red" ng-show="myForm.username.$dirty && myForm.username.$invalid"></i>
+          <i class="ion-checkmark-round padding green" ng-show="myForm.username.$dirty && myForm.username.$valid"></i>
+        </label>
+        <label class="item item-input">
+          <i class="padding icon ion-unlocked"></i>
+          <input type="text" placeholder="6-18位的密码" required ng-minlength="6" ng-maxlength="18" ng-model="user.password" name="password" id="password">
+          <i class="ion-close-round padding" ng-show="myForm.password.$dirty && myForm.password.$invalid"></i>
+          <i class="ion-checkmark-round padding" ng-show="myForm.password.$dirty && myForm.password.$valid"></i>
+        </label>
+        <label class="item item-input">
+          <i class="padding icon ion-unlocked"></i>
+          <input type="text" placeholder="确认密码" required ng-minlength="6" ng-maxlength="18" ng-model="user.comparePassword" name="comparePassword" id="comparePassword">
+          <i class="ion-close-round padding" ng-show="myForm.password.$dirty && myForm.password.$invalid"></i>
+          <i class="ion-checkmark-round padding" ng-show="myForm.password.$dirty && myForm.password.$valid"></i>
+        </label>
+      </div>
+    </form>
+  </ion-content>
+</ion-view>
