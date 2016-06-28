@@ -1,20 +1,35 @@
 <ion-view view-title="请登录">
   <ion-content>
-    <div class="list">
-      <label class="item item-input">
-        <i class="padding icon ion-person"></i>
-        <input type="text" placeholder="用户名" value="{{username}}">
-      </label>
-      <label class="item item-input">
-        <i class="padding icon ion-unlocked"></i>
-        <input type="password" placeholder="密码">
-      </label>
-      <ion-toggle>
-        记住我
-      </ion-toggle>
-      <button class="button button-full button-positive" ng-click="login()">
-        登录{{hideHeader}}
-      </button>
-    </div>
+    <form role="form" name="loginForm" novalidate>
+      <div class="list list-inset">
+        <label class="item item-input m10">
+          <i class="padding icon ion-person"></i>
+          <span class="input-label">用户名：</span>
+          <input type="text" placeholder="请输入用户名 ..." required >
+          <i class="ion-close-round padding red" ng-show="loginForm.username.$dirty && loginForm.username.$invalid"></i>
+          <i class="ion-checkmark-round padding green" ng-show="loginForm.username.$dirty && loginForm.username.$valid"></i>
+        </label>
+        <label class="item item-input m10">
+          <i class="padding icon ion-unlocked"></i>
+          <span class="input-label">密码：</span>
+          <input type="password" placeholder="请输入密码 ...">
+        </label>
+        <ion-toggle>
+          记住我
+        </ion-toggle>
+        <div class="row">
+          <div class="col col-80">
+            <a href="/#/reg">注册用户</a>
+          </div>
+          <div class="col col-20">
+            <a href="/#/findpassword">忘记密码</a>
+          </div>
+        </div>
+        <button class="button button-full button-positive" ng-click="doLogin()">
+          登录{{hideHeader}}
+        </button>
+      </div>
+    </form>
+
   </ion-content>
 </ion-view>

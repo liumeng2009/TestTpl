@@ -26,7 +26,4 @@ angular.module('starter.controllers', ['loginControllers','regControllers'])
     enableFriends: true
   };
 })
-  .controller('RegCtrl',function($scope){
-
-  })
 ;
