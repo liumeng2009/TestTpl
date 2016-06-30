@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/6/27.
  */
 angular.module('loginControllers',[])
-  .controller('LoginCtrl',['$scope','$state','$loginData','$ionicLoading','$ionicPopup','$timeout',function($scope,$state,$loginData,$ionicLoading,$ionicPopup,$timeout){
+  .controller('LoginCtrl',['$scope','$state','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory',function($scope,$state,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory){
     $scope.user={
       username:'dreams',
       password:'123456'
@@ -16,7 +16,9 @@ angular.module('loginControllers',[])
         if(data.success === 0){
           $scope.showErrorMesPopup(data.msg);
         }else{
-          $state.go('tab.dash')
+          //成功，把token存入localStorage
+          $window.localStorage.accesstoken=data.token;
+          $ionicHistory.goBack(-1);
         }
       }).error(function(){
         $ionicLoading.hide();

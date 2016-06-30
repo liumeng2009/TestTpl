@@ -44,30 +44,37 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     .state('tab', {
     url: '/tab',
     abstract: true,
-    templateUrl: 'templates/tabs.html'
+    templateUrl: 'js/usercenter/tabs.html'
   })
 
   // Each tab has its own nav history stack:
 
-  .state('tab.dash', {
-    url: '/dash',
+  .state('tab.weibo', {
+    url: '/weibo',
     views: {
-      'tab-dash': {
-        templateUrl: 'templates/tab-dash.html',
-        controller: 'DashCtrl'
+      'tab-weibo': {
+        templateUrl: 'js/weibo/weibo.html'
       }
     }
   })
 
-  .state('tab.chats', {
-      url: '/chats',
+  .state('tab.children', {
+      url: '/children',
       views: {
-        'tab-chats': {
-          templateUrl: 'templates/tab-chats.html',
-          controller: 'ChatsCtrl'
+        'tab-children': {
+          templateUrl: 'js/children/children.html'
         }
       }
     })
+    .state('tab.usercenter', {
+      url: '/usercenter',
+      views: {
+        'tab-usercenter': {
+          templateUrl: 'js/usercenter/usercenter.html'
+        }
+      }
+    })
+    /*
     .state('tab.chat-detail', {
       url: '/chats/:chatId',
       views: {
@@ -87,7 +94,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       }
     }
   })
+  */
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/tab/dash');
+  $urlRouterProvider.otherwise('/tab/weibo');
 
 });

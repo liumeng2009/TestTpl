@@ -11,3 +11,9 @@
 .m10{
   margin: 10px;
 }
+.tabs{
+  height:auto;
+}
+.tab-item .icon{
+  margin:5px;
+}
