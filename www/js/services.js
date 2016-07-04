@@ -1,4 +1,4 @@
-angular.module('starter.services', ['loginServices','regServices'])
+angular.module('starter.services', ['loginServices','regServices','usercenterServices'])
 
 .factory('Chats', function() {
   // Might use a resource here that returns a JSON array

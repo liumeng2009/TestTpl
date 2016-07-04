@@ -23,8 +23,10 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
   });
 })
 
-.config(function($stateProvider, $urlRouterProvider) {
-
+.config(function($stateProvider, $urlRouterProvider,$ionicConfigProvider) {
+  $ionicConfigProvider.views.transition('ios');
+  $ionicConfigProvider.tabs.position('bottom');
+  $ionicConfigProvider.tabs.style('standard');
   // Ionic uses AngularUI Router which uses the concept of states
   // Learn more here: https://github.com/angular-ui/ui-router
   // Set up the various states which the app can be in.
@@ -70,7 +72,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       url: '/usercenter',
       views: {
         'tab-usercenter': {
-          templateUrl: 'js/usercenter/usercenter.html'
+          templateUrl: 'js/usercenter/usercenter.html',
+          controller:'UserCenterCtrl'
         }
       }
     })

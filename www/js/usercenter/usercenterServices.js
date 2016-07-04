@@ -4,8 +4,8 @@
 angular.module('usercenterServices',[])
   .factory('$usercenterData',function($http){
     return {
-      login:function(requestParams){
-        var url=config.basePath+'signin?username='+requestParams.username+'&password='+requestParams.password;
+      usercenter:function(requestParams){
+        var url=config.basePath+'usercenter?token='+requestParams.token;
         return $http({
           url:url,
           type:'GET'
