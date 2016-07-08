@@ -24,6 +24,9 @@ angular.module('usercenterControllers',[])
             $scope.showErrorMesPopup('网络连接错误');
           });
       }
+      else{
+        $ionicLoading.hide();
+      }
     });
     $scope.showErrorMesPopup = function(title) {
       var myPopup = $ionicPopup.show({
