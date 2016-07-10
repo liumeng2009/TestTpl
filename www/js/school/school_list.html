@@ -1,0 +1,11 @@
+<ion-view title="学校列表">
+  <ion-content>
+    <div class="list">
+      <a class="item item-thumbnail-left" href="#" ng-repeat="school in schools">
+        <img src="http://127.0.0.1:3000/{{school.image}}">
+        <h2>{{school.name}}</h2>
+        <p>{{school.owner.nickname}}</p>
+      </a>
+    </div>
+  </ion-content>
+</ion-view>

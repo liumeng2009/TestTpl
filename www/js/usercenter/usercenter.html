@@ -1,4 +1,4 @@
-<ion-view view-title="Account">
+<ion-view view-title="个人中心">
   <ion-content>
     <div class="avatar-bg">
       <img class="avatar" src="" ng-if="user.image" ng-model="user.image" >
@@ -26,7 +26,15 @@
         </a>
       </ion-item>
       <ion-item class="item-icon-left">
-        <a href="#">
+        <a href="/#/login" ng-if="!user">
+          <i class="icon ion-ios-people-outline"></i>
+          我的组织
+        </a>
+        <a href="/#/school/list" ng-if="user.isPresident">
+          <i class="icon ion-ios-people-outline"></i>
+          我的组织
+        </a>
+        <a href="/#/grade/list" ng-if="!user.isPresident">
           <i class="icon ion-ios-people-outline"></i>
           我的组织
         </a>

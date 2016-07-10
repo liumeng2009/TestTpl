@@ -27,6 +27,25 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
   $ionicConfigProvider.views.transition('ios');
   $ionicConfigProvider.tabs.position('bottom');
   $ionicConfigProvider.tabs.style('standard');
+  var configProperties = {
+    views: {
+      maxCache: 5,
+      forwardCache: true,
+      transition: 'ios'
+    },
+    navBar: {
+    },
+    backButton: {
+      icon: 'ion-chevron-left',
+      text: '&nbsp;',
+      previousTitleText: false
+    },
+    templates: {
+      // maxPrefetch: 0
+    }
+  };
+  $ionicConfigProvider.setPlatformConfig('ios', configProperties);
+  $ionicConfigProvider.setPlatformConfig('android', configProperties);
   // Ionic uses AngularUI Router which uses the concept of states
   // Learn more here: https://github.com/angular-ui/ui-router
   // Set up the various states which the app can be in.
@@ -55,7 +74,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     url: '/weibo',
     views: {
       'tab-weibo': {
-        templateUrl: 'js/weibo/weibo.html'
+        templateUrl: 'js/weibo/weibo.html',
+        controller:'WeiboCtrl'
       }
     }
   })
@@ -76,6 +96,20 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
           controller:'UserCenterCtrl'
         }
       }
+    })
+    .state('school',{
+      url:'/school',
+      abstract:true,
+      templateUrl:'js/school/base.html'
+    })
+    .state('school.list',{
+      url:'/list',
+      templateUrl:'js/school/school_list.html',
+      controller:'SchoolCtrl'
+    })
+    .state('school.add',{
+      url:'/add',
+      templateUrl:'js/school/school.html',
     })
     /*
     .state('tab.chat-detail', {

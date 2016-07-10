@@ -1,21 +1,21 @@
 /**
  * Created by Administrator on 2016/6/29.
  */
-angular.module('usercenterControllers',[])
-  .controller('UserCenterCtrl',['$scope','$rootScope','$state','$usercenterData','$ionicLoading','$ionicPopup','$timeout','$window',function($scope,$rootScope,$state,$usercenterData,$ionicLoading,$ionicPopup,$timeout,$window){
+angular.module('schoolControllers',[])
+  .controller('SchoolCtrl',['$scope','$rootScope','$state','$schoolData','$ionicLoading','$ionicPopup','$timeout','$window',function($scope,$rootScope,$state,$schoolData,$ionicLoading,$ionicPopup,$timeout,$window){
     $scope.$on('$ionicView.afterEnter',function(){
       $ionicLoading.show({
         delay:200
       });
       var token=$window.localStorage.accesstoken;
       if(token){
-        $usercenterData.usercenter({token:token})
+        $schoolData.list({token:token})
           .success(function(data){
             $ionicLoading.hide();
             if(data.success === 0){
               $scope.showErrorMesPopup(data.msg);
             }else{
-              $scope.user=data.user;
+              $scope.schools=data.schools;
             }
           })
           .error(function(){
