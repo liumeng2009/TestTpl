@@ -1,31 +1,18 @@
 /**
- * Created by Administrator on 2016/6/29.
+ * Created by Administrator on 2016/7/11.
  */
 angular.module('schoolControllers',[])
   .controller('SchoolCtrl',['$scope','$rootScope','$state','$schoolData','$ionicLoading','$ionicPopup','$timeout','$window',function($scope,$rootScope,$state,$schoolData,$ionicLoading,$ionicPopup,$timeout,$window){
     $scope.$on('$ionicView.afterEnter',function(){
-      $ionicLoading.show({
-        delay:200
-      });
+      $("#city1").citySelect({nodata: "none", required: false});
       var token=$window.localStorage.accesstoken;
       if(token){
-        $schoolData.list({token:token})
-          .success(function(data){
-            $ionicLoading.hide();
-            if(data.success === 0){
-              $scope.showErrorMesPopup(data.msg);
-            }else{
-              $scope.schools=data.schools;
-            }
-          })
-          .error(function(){
-            $ionicLoading.hide();
-            $scope.showErrorMesPopup('网络连接错误');
-          });
+
       }
       else{
-        $ionicLoading.hide();
+
       }
+
     });
     $scope.showErrorMesPopup = function(title) {
       var myPopup = $ionicPopup.show({

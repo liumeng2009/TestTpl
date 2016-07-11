@@ -105,33 +105,13 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     .state('school.list',{
       url:'/list',
       templateUrl:'js/school/school_list.html',
-      controller:'SchoolCtrl'
+      controller:'SchoolListCtrl'
     })
     .state('school.add',{
       url:'/add',
       templateUrl:'js/school/school.html',
+      controller:'SchoolCtrl'
     })
-    /*
-    .state('tab.chat-detail', {
-      url: '/chats/:chatId',
-      views: {
-        'tab-chats': {
-          templateUrl: 'templates/chat-detail.html',
-          controller: 'ChatDetailCtrl'
-        }
-      }
-    })
-
-  .state('tab.account', {
-    url: '/account',
-    views: {
-      'tab-account': {
-        templateUrl: 'templates/tab-account.html',
-        controller: 'AccountCtrl'
-      }
-    }
-  })
-  */
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/tab/weibo');
 

@@ -19,26 +19,22 @@
     </div>
 
     <ion-list class="fun_list">
-      <ion-item class="item-icon-left">
-        <a href="#">
+      <a class="item item-icon-left" href="#">
           <i class="icon ion-ios-email-outline"></i>
           消息中心
-        </a>
-      </ion-item>
-      <ion-item class="item-icon-left">
-        <a href="/#/login" ng-if="!user">
+      </a>
+      <a class="item-icon-left item" href="/#/login" ng-if="!user">
           <i class="icon ion-ios-people-outline"></i>
           我的组织
-        </a>
-        <a href="/#/school/list" ng-if="user.isPresident">
-          <i class="icon ion-ios-people-outline"></i>
-          我的组织
-        </a>
-        <a href="/#/grade/list" ng-if="!user.isPresident">
-          <i class="icon ion-ios-people-outline"></i>
-          我的组织
-        </a>
-      </ion-item>
+      </a>
+      <a class="item-icon-left item" href="/#/school/list"  ng-if="user.isPresident">
+        <i class="icon ion-ios-people-outline"></i>
+        我的组织
+      </a>
+      <a class="item-icon-left item" href="/#/grade/list" ng-if="user&&!user.isPresident">
+        <i class="icon ion-ios-people-outline"></i>
+        我的组织
+      </a>
       <ion-item class="item-icon-left">
         <a href="#">
           <i class="icon ion-ios-paw-outline"></i>

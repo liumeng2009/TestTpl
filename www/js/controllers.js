@@ -1,4 +1,4 @@
-angular.module('starter.controllers', ['loginControllers','regControllers','usercenterControllers','weiboControllers','schoolControllers'])
+angular.module('starter.controllers', ['loginControllers','regControllers','usercenterControllers','weiboControllers','schoolListControllers','schoolControllers'])
 
 .controller('DashCtrl', function($scope) {
 })
