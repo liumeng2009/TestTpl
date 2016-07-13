@@ -4,9 +4,6 @@
 angular.module('usercenterControllers',[])
   .controller('UserCenterCtrl',['$scope','$rootScope','$state','$usercenterData','$ionicLoading','$ionicPopup','$timeout','$window',function($scope,$rootScope,$state,$usercenterData,$ionicLoading,$ionicPopup,$timeout,$window){
     $scope.$on('$ionicView.afterEnter',function(){
-      $ionicLoading.show({
-        delay:200
-      });
       var token=$window.localStorage.accesstoken;
       if(token){
         $usercenterData.usercenter({token:token})
@@ -19,12 +16,10 @@ angular.module('usercenterControllers',[])
             }
           })
           .error(function(){
-            $ionicLoading.hide();
             $scope.showErrorMesPopup('网络连接错误');
           });
       }
       else{
-        $ionicLoading.hide();
       }
     });
     $scope.showErrorMesPopup = function(title) {

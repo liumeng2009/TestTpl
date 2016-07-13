@@ -79,6 +79,18 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       }
     }
   })
+  .state('weibo_add',{
+    url:'/weibo/add',
+    templateUrl:'js/weibo/weibo_add.html'
+  })
+  .state('tab.message', {
+    url: '/message',
+    views: {
+      'tab-message': {
+        templateUrl: 'js/message/message.html'
+      }
+    }
+  })
 
   .state('tab.children', {
       url: '/children',
@@ -111,6 +123,11 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       url:'/add',
       templateUrl:'js/school/school.html',
       controller:'SchoolCtrl'
+    })
+    .state('school.edit',{
+      url:'/edit/:id',
+      templateUrl:'js/school/school.html',
+      controller:'SchoolEditCtrl'
     })
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/tab/weibo');

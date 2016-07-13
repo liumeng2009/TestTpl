@@ -10,6 +10,13 @@ angular.module('schoolServices',[])
           url:url,
           type:'GET'
         })
+      },
+      school:function(requestParams){
+        var url=config.basePath+'school?token='+requestParams.token+'&id'+requestParams.id;
+        return $http({
+          url:url,
+          type:'GET'
+        })
       }
     }
   });

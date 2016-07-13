@@ -1,5 +1,5 @@
 /**
- * Created by Administrator on 2016/6/29.
+ * Created by Administrator on 2016/7/11.
  */
 angular.module('schoolListControllers',[])
   .controller('SchoolListCtrl',['$scope','$rootScope','$state','$schoolData','$ionicLoading','$ionicPopup','$timeout','$window',function($scope,$rootScope,$state,$schoolData,$ionicLoading,$ionicPopup,$timeout,$window){
@@ -39,3 +39,4 @@ angular.module('schoolListControllers',[])
       $state.go('school.add');
     }
   }]);
+;
