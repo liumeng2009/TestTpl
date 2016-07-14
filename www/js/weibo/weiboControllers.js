@@ -3,9 +3,6 @@
  */
 angular.module('weiboControllers',[])
   .controller('WeiboCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$ionicLoading','$ionicPopup','$timeout','$window',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$ionicLoading,$ionicPopup,$timeout,$window){
-    $scope.goAdd=function(){
-      $state.go('weibo_add')
-    }
     $ionicModal.fromTemplateUrl('templates/modal.html', {
       scope: $scope
     }).then(function(modal) {

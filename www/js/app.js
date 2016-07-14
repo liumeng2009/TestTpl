@@ -109,25 +109,10 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
         }
       }
     })
-    .state('school',{
-      url:'/school',
-      abstract:true,
-      templateUrl:'js/school/base.html'
-    })
-    .state('school.list',{
-      url:'/list',
+    .state('school_list',{
+      url:'/school/list',
       templateUrl:'js/school/school_list.html',
       controller:'SchoolListCtrl'
-    })
-    .state('school.add',{
-      url:'/add',
-      templateUrl:'js/school/school.html',
-      controller:'SchoolCtrl'
-    })
-    .state('school.edit',{
-      url:'/edit/:id',
-      templateUrl:'js/school/school.html',
-      controller:'SchoolEditCtrl'
     })
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/tab/weibo');

@@ -8,7 +8,6 @@ angular.module('usercenterControllers',[])
       if(token){
         $usercenterData.usercenter({token:token})
           .success(function(data){
-            $ionicLoading.hide();
             if(data.success === 0){
               $scope.showErrorMesPopup(data.msg);
             }else{

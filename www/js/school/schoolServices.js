@@ -8,15 +8,23 @@ angular.module('schoolServices',[])
         var url=config.basePath+'school_list?token='+requestParams.token;
         return $http({
           url:url,
-          type:'GET'
+          method:'GET'
         })
       },
       school:function(requestParams){
-        var url=config.basePath+'school?token='+requestParams.token+'&id'+requestParams.id;
+        var url=config.basePath+'school?token='+requestParams.token+'&id='+requestParams.id;
         return $http({
           url:url,
-          type:'GET'
+          method:'GET'
         })
+      },
+      add:function(requestParams){
+        var url=config.basePath+'school_add?token='+requestParams.token;
+        return $http({
+          url:url,
+          method:'POST',
+          data:requestParams.school
+        });
       }
     }
   });
