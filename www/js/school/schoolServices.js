@@ -25,6 +25,13 @@ angular.module('schoolServices',[])
           method:'POST',
           data:requestParams.school
         });
-      }
+      },
+      list_all:function(requestParams){
+        var url=config.basePath+'school_list_all?token='+requestParams.token;
+        return $http({
+          url:url,
+          method:'GET'
+        })
+      },
     }
   });

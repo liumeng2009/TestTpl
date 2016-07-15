@@ -1,7 +1,72 @@
 <ion-view view-title="我的孩子">
+  <ion-header-bar align-title="center" class="bar-stable">
+    <div class="buttons">
+      <button class="button"  ng-click="selectschool()">5555</button>
+    </div>
+    <h1 class="title">学校列表</h1>
+    <div class="buttons">
+      <button class="button" ng-click="openModal()">添加</button>
+    </div></ion-header-bar>
   <ion-content>
     <h2>
       小孩儿的管理模块，家长查看信息，请假等等功能
     </h2>
   </ion-content>
+
+  <script id="templates/modal_children_add.html" type="text/ng-template">
+    <ion-modal-view>
+      <form role="form" name="childForm" novalidate>
+        <ion-header-bar align-title="center" class="bar-stable">
+          <div class="buttons">
+            <button class="button" ng-click="modal.hide()">取消</button>
+          </div>
+          <h1 class="title">{{child.title}}</h1>
+          <div class="buttons">
+            <button class="button button-energized" ng-disabled="childForm.$invalid" ng-click="save()" >保存</button>
+          </div>
+        </ion-header-bar>
+        <ion-content>
+          <div class="list" id="city{{school._id}}">
+            <label class="item item-input m10">
+              <input type="hidden" ng-model="school._id">
+              <label class="input-label">姓名</label>
+              <input type="text" placeholder="不少于6个字符" required ng-minlength="6" name="name" ng-model="child.name">
+              <i class="ion-close-round pr10 red" ng-show="childForm.name.$dirty && childForm.name.$invalid"></i>
+              <i class="ion-checkmark-round pr10 green" ng-show="childForm.name.$dirty && childForm.name.$valid"></i>
+            </label>
+
+            <label class="item item-input item-select m10">
+              <label class="input-label placeholder-icon">性别</label>
+              <select name="sex" class="dist" ng-model="child.sex" required>
+                <option value="0">女</option>
+                <option value="1">男</option>
+              </select>
+              <i class="ion-close-round pr10 red" ng-show="childForm.sex.$dirty && childForm.sex.$invalid"></i>
+              <i class="ion-checkmark-round pr10 green" ng-show="childForm.sex.$dirty && childForm.sex.$valid"></i>
+            </label>
+            <label class="item item-input m10">
+              <label class="input-label placeholder-icon">年龄</label>
+              <input type="number" placeholder="输入年龄" required name="age"  id="age" ng-model="child.age">
+              <i class="ion-close-round pr10 red" ng-show="childForm.age.$dirty && childForm.age.$invalid"></i>
+              <i class="ion-checkmark-round pr10 green" ng-show="childForm.age.$dirty && childForm.age.$valid"></i>
+            </label>
+            <label class="item item-input m10" ng-click="selectschool()" >
+              <label class="input-label">所在学校</label>
+              <input type="text" placeholder="点击选择" required name="school"  id="school" ng-model="orgnow.sname">
+              <i class="ion-close-round pr10 red" ng-show="childForm.school.$dirty && childForm.school.$invalid"></i>
+              <i class="ion-checkmark-round pr10 green" ng-show="childForm.school.$dirty && childForm.school.$valid"></i>
+            </label>
+            <label class="item item-input m10" ng-click="selectgrade()">
+              <label class="input-label">所在班级</label>
+              <input type="text" placeholder="点击选择" required name="grade" id="grade" ng-model="orgnow.gname">
+              <i class="ion-close-round pr10 red" ng-show="childForm.grade.$dirty && childForm.grade.$invalid"></i>
+              <i class="ion-checkmark-round pr10 green" ng-show="childForm.grade.$dirty && childForm.grade.$valid"></i>
+            </label>
+          </div>
+        </ion-content>
+      </form>
+    </ion-modal-view>
+  </script>
+
+
 </ion-view>

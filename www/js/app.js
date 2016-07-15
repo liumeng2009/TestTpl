@@ -96,7 +96,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       url: '/children',
       views: {
         'tab-children': {
-          templateUrl: 'js/children/children.html'
+          templateUrl: 'js/children/children.html',
+          controller:'ChildrenCtrl'
         }
       }
     })
