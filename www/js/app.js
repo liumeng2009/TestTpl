@@ -115,6 +115,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       templateUrl:'js/school/school_list.html',
       controller:'SchoolListCtrl'
     })
+    .state('chat',{
+      url:'/chat',
+      templateUrl:'js/chat/chat.html',
+      controller:'ChatCtrl',
+      params:{'from':null,'to':null}
+    })
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/tab/weibo');
 

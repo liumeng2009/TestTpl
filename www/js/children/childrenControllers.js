@@ -4,11 +4,38 @@
 var selectPop;
 angular.module('childrenControllers',[])
   .controller('ChildrenCtrl',['$scope','$rootScope','$ionicModal','$state','$usercenterData','$schoolData','$gradeData','$childrenData','$ionicLoading','$ionicPopup','$timeout','$window',function($scope,$rootScope,$ionicModal,$state,$usercenterData,$schoolData,$gradeData,$childrenData,$ionicLoading,$ionicPopup,$timeout,$window){
+    $scope.$on('$ionicView.afterEnter',function(){
+      $ionicLoading.show({
+        delay:200
+      });
+      var token=$window.localStorage.accesstoken;
+      if(token){
+        $childrenData.list({token:token})
+          .success(function(data){
+            $ionicLoading.hide();
+            if(data.success === 0){
+              $scope.showErrorMesPopup(data.msg);
+            }else{
+              $scope.students=data.students;
+            }
+          })
+          .error(function(){
+            $ionicLoading.hide();
+            $scope.showErrorMesPopup('网络连接错误');
+          });
+      }
+      else{
+        $ionicLoading.hide();
+      }
+    });
     $scope.orgnow={
       sname:'',
       _sid:'',
       gname:'',
       _gid:''
+    };
+    $scope.student={
+
     };
     $scope.selectschool=function(u){
       $ionicLoading.show({
@@ -88,8 +115,35 @@ angular.module('childrenControllers',[])
     }).then(function(modal) {
       $scope.modal = modal;
     });
+    $ionicModal.fromTemplateUrl('templates/modal_chat_list.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function(modal) {
+      $scope.modal_chat = modal;
+    });
     $scope.openModal=function(schoolid){
       $scope.modal.show();
+    }
+    $scope.showChatModal=function(studentid){
+      $scope.modal_chat.show();
+      var token=$window.localStorage.accesstoken;
+      $ionicLoading.show({
+        delay:300
+      });
+      if(token){
+        $childrenData.chat_list({token:token,studentid:studentid})
+          .success(function(data){
+            $ionicLoading.hide();
+            $scope.users=data.users;
+          })
+          .error(function(){
+            $ionicLoading.hide();
+            $scope.showErrorMesPopup('网络连接错误');
+          });
+      }
+      else{
+
+      }
     }
     $scope.setSchoolNow=function(){
       $scope.orgnow.sname=this.school.name;
@@ -103,6 +157,7 @@ angular.module('childrenControllers',[])
     };
     $rootScope.$on('$stateChangeStart',function(){
       $scope.modal.hide();
+      $scope.modal_chat.hide();
     });
     //显示错误信息
     $scope.showErrorMesPopup = function(title) {
@@ -114,9 +169,9 @@ angular.module('childrenControllers',[])
       }, 1000);
     };
     $scope.save=function(){
-      var child=this.child;
-      child.prototype.school=$scope.orgnow._sid;
-      child.prototype.grade=$scope.orgnow._gid;
+      var child=this.student;
+      child.school=$scope.orgnow._sid;
+      child.grade=$scope.orgnow._gid;
       var token=$window.localStorage.accesstoken;
       $ionicLoading.show({
         delay:300
@@ -134,6 +189,25 @@ angular.module('childrenControllers',[])
       }
       else{
         $ionicLoading.hide();
+      }
+    }
+    $scope.chatWithUser=function(to){
+      var token=$window.localStorage.accesstoken;
+      if(token){
+        $usercenterData.usercenter({token:token})
+          .success(function(data){
+            if(data.success === 0){
+              $scope.showErrorMesPopup(data.msg);
+            }else{
+              $state.go('chat',{from:data.user.name,to:to});
+            }
+          })
+          .error(function(){
+            $scope.showErrorMesPopup('网络连接错误');
+          });
+      }
+      else{
+
       }
     }
   }]);
