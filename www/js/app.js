@@ -23,7 +23,13 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
   });
 })
 
-.config(function($stateProvider, $urlRouterProvider,$ionicConfigProvider) {
+.config(function($stateProvider, $urlRouterProvider,$ionicConfigProvider,$sceDelegateProvider) {
+  $sceDelegateProvider.resourceUrlWhitelist([
+    // Allow same origin resource loads.
+    'self',
+    'http://127.0.0.1:3000',
+    // Allow loading from our assets domain.  Notice the difference between * and **.
+    'http://media.w3.org/**']);
   $ionicConfigProvider.views.transition('ios');
   $ionicConfigProvider.tabs.position('bottom');
   $ionicConfigProvider.tabs.style('standard');

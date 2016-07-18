@@ -5,9 +5,9 @@ angular.module('regServices',[])
   .factory('$regData',function($http){
     return {
       reg:function(requestParams){
-        var url=config.basePath+'/signup'
+        var url=config.basePath+'signup'
         return $http({
-          type:'POST',
+          method:'POST',
           url:url,
           data:requestParams
         })
