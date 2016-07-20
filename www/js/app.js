@@ -123,6 +123,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     })
     .state('chat',{
       url:'/chat',
+      cache:false,
       templateUrl:'js/chat/chat.html',
       controller:'ChatCtrl',
       params:{'from':null,'to':null}

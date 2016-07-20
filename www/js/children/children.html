@@ -7,7 +7,7 @@
   <ion-content>
     <div class="list card" ng-repeat="student in students">
       <div class="item item-avatar">
-        <img src="http://127.0.0.1:3000/{{student.image}}" ng-if="student.image">
+        <img ng-src="http://127.0.0.1:3000/{{student.image}}" ng-if="student.image">
         <img src="../../img/avata_128.jpg" ng-if="!student.image">
         <h2>{{student.name}}</h2>
         <p>{{student.grade.name}}</p>
@@ -98,7 +98,7 @@
             </label>
             的
             <label>{{user.roles[0].role.name}}</label>)
-            <button class="button" ng-click="chatWithUser('{{user.name}}')"><i class="icon ion-ios-chatbubble"></i></button>
+            <button class="button" ng-click="chatWithUser('{{user._id}}','{{user.name}}')"><i class="icon ion-ios-chatbubble"></i></button>
           </div>
         </ion-list>
       </ion-content>

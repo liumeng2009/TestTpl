@@ -191,7 +191,7 @@ angular.module('childrenControllers',[])
         $ionicLoading.hide();
       }
     }
-    $scope.chatWithUser=function(to){
+    $scope.chatWithUser=function(_id,_name){
       var token=$window.localStorage.accesstoken;
       if(token){
         $usercenterData.usercenter({token:token})
@@ -199,7 +199,16 @@ angular.module('childrenControllers',[])
             if(data.success === 0){
               $scope.showErrorMesPopup(data.msg);
             }else{
-              $state.go('chat',{from:data.user.name,to:to});
+              $state.go('chat',{
+                from:{
+                  _id:data.user._id,
+                  name:data.user.name
+                },
+                to:{
+                  _id:_id,
+                  name:_name
+                }
+              });
             }
           })
           .error(function(){
