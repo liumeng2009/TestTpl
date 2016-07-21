@@ -99,6 +99,10 @@
 .fun_list i.icon {
   color: #387ef5;
 }
+.bar-positive .button {
+  background-color: transparent;
+  border: none;
+}
 #incomingChatMessages .list-per {
   float: left;
   width: 100%;

@@ -26,6 +26,7 @@ angular.module('childrenControllers',[])
       }
       else{
         $ionicLoading.hide();
+        $state.go('login',{redirectUrl:'tab.children'});
       }
     });
     $scope.orgnow={

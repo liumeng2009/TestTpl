@@ -2,10 +2,25 @@
  * Created by Administrator on 2016/6/27.
  */
 angular.module('loginControllers',[])
-  .controller('LoginCtrl',['$scope','$state','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory',function($scope,$state,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory){
+  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory){
+    $ionicModal.fromTemplateUrl('templates/reg.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function(modal) {
+      $scope.modal_reg = modal;
+    });
+    $scope.showReg=function(){
+      $scope.modal_reg.show();
+    }
+    $scope.hideReg=function(){
+      $scope.modal_reg.hide();
+    }
     $scope.user={
-      username:'dreams',
-      password:'123456'
+      username:'',
+      password:''
+    }
+    $scope.backLeft=function(){
+      $state.go(-1);
     }
     $scope.doLogin=function(){
       $ionicLoading.show({
@@ -18,7 +33,13 @@ angular.module('loginControllers',[])
         }else{
           //成功，把token存入localStorage
           $window.localStorage.accesstoken=data.token;
-          $ionicHistory.goBack(-1);
+          //登录成功之后，跳转
+          if($stateParams.redirectUrl){
+            $state.go($stateParams.redirectUrl);
+          }
+          else{
+            $state.go('tab.usercenter');
+          }
         }
       }).error(function(){
         $ionicLoading.hide();
@@ -27,10 +48,10 @@ angular.module('loginControllers',[])
     }
     $scope.showErrorMesPopup = function(title) {
       var myPopup = $ionicPopup.show({
-        title: '<b>'+title+'</b>'
+        title: title
       });
       $timeout(function() {
-        myPopup.close(); // 2秒后关闭
+        myPopup.close();
       }, 1000);
     };
   }]);

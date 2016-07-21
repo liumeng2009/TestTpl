@@ -29,4 +29,8 @@ angular.module('usercenterControllers',[])
         myPopup.close(); // 2秒后关闭
       }, 1000);
     };
+    $scope.logout=function(){
+      $window.localStorage.accesstoken=undefined;
+      $scope.user=undefined;
+    }
   }]);

@@ -32,8 +32,8 @@ angular.module('chatControllers',[])
         iosocket.on('from'+$stateParams.to._id+'to'+$stateParams.from._id,function(obj){
           var _m={
             type:'to',
-            image:obj.user.image,
-            username:obj.user.name,
+            image:$scope.touser.image,
+            username:$scope.touser.name,
             mess:obj.message
           }
           $scope.messages.push(_m);

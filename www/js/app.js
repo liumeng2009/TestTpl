@@ -61,7 +61,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
     .state('login',{
       url:'/login',
       templateUrl:'js/login/login.html',
-      controller:'LoginCtrl'
+      controller:'LoginCtrl',
+      params:{redirectUrl:null}
     })
     .state('reg',{
       url:'/reg',
