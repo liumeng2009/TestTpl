@@ -1,0 +1,15 @@
+<ion-view>
+  <ion-header-bar class="bar-stable">
+    <ion-title>晓园</ion-title>
+  </ion-header-bar>
+  <ion-content>
+    <ion-list>
+      <ion-item ng-repeat="chat in chats">
+        <img ng-src="chat.to.image" ng-if="chat.to.image">
+        <img ng-src="../../img/avata_128.jpg" ng-if="!chat.to.image">
+        <p>{{chat.to.name}}</p>
+        <p>{{chat.content}}</p>
+      </ion-item>
+    </ion-list>
+  </ion-content>
+</ion-view>

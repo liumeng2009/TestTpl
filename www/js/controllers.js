@@ -1,1 +1,1 @@
-angular.module('starter.controllers', ['loginControllers','regControllers','usercenterControllers','weiboControllers','schoolListControllers','childrenControllers','chatControllers']);
+angular.module('starter.controllers', ['loginControllers','regControllers','usercenterControllers','mainControllers','schoolListControllers','childrenControllers','chatControllers']);

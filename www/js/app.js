@@ -77,18 +77,14 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
 
   // Each tab has its own nav history stack:
 
-  .state('tab.weibo', {
-    url: '/weibo',
+  .state('tab.main', {
+    url: '/main',
     views: {
-      'tab-weibo': {
-        templateUrl: 'js/weibo/weibo.html',
-        controller:'WeiboCtrl'
+      'tab-main': {
+        templateUrl: 'js/weibo/main.html',
+        controller:'MainCtrl'
       }
     }
-  })
-  .state('weibo_add',{
-    url:'/weibo/add',
-    templateUrl:'js/weibo/weibo_add.html'
   })
   .state('tab.message', {
     url: '/message',
@@ -130,6 +126,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services'])
       params:{'from':null,'to':null}
     })
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/tab/weibo');
+  $urlRouterProvider.otherwise('/tab/main');
 
 });

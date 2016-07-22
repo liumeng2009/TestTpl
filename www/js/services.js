@@ -1,1 +1,1 @@
-angular.module('starter.services', ['loginServices','regServices','usercenterServices','schoolServices','gradeServices','childrenServices']);
+angular.module('starter.services', ['loginServices','regServices','usercenterServices','schoolServices','gradeServices','childrenServices','mainServices']);
