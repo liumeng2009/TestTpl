@@ -3,12 +3,14 @@
     <ion-title>晓园</ion-title>
   </ion-header-bar>
   <ion-content>
-    <ion-list>
-      <ion-item ng-repeat="chat in chats">
+    <ion-list id="mainlist">
+      <ion-item ng-repeat="chat in chats" ng-click="chatwidth('{{chat.id}}','{{chat.name}}')">
         <img ng-src="chat.to.image" ng-if="chat.to.image">
         <img ng-src="../../img/avata_128.jpg" ng-if="!chat.to.image">
-        <p>{{chat.to.name}}</p>
-        <p>{{chat.content}}</p>
+        <div class="right">
+          <p class="name">{{chat.name}}</p>
+          <p class="content">{{chat.content}}</p>
+        </div>
       </ion-item>
     </ion-list>
   </ion-content>

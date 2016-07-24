@@ -10,6 +10,14 @@ angular.module('loginServices',[])
           url:url,
           type:'GET'
         })
+      },
+      reg:function(requestParams){
+        var url=config.basePath+'signup'
+        return $http({
+          method:'POST',
+          url:url,
+          data:requestParams
+        })
       }
     }
   });

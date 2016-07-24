@@ -19,6 +19,7 @@ angular.module('usercenterControllers',[])
           });
       }
       else{
+        $state.go('login');
       }
     });
     $scope.showErrorMesPopup = function(title) {

@@ -4,11 +4,11 @@
 angular.module('mainServices',[])
   .factory('$mainData',function($http){
     return {
-      list:function(requestParams){
-        var url=config.basePath+'chat_list?token='+requestParams.token;
+      not_read_list:function(requestParams){
+        var url=config.basePath+'chat_not_read_list?token='+requestParams.token;
         return $http({
           url:url,
-          type:'GET'
+          method:'GET'
         })
       }
     }

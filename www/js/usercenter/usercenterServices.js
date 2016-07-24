@@ -10,6 +10,13 @@ angular.module('usercenterServices',[])
           url:url,
           type:'GET'
         })
+      },
+      user_by_id:function(requestParams){
+        var url=config.basePath+'user_by_id?token='+requestParams.token+'&id='+requestParams.id;
+        return $http({
+          url:url,
+          type:'GET'
+        })
       }
     }
   });

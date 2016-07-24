@@ -194,3 +194,19 @@
   border-top: 10px transparent solid;
   border-bottom: 10px transparent solid;
 }
+#mainlist img {
+  width: 48px;
+  height: 48px;
+  float: left;
+}
+#mainlist .right {
+  float: left;
+  margin-left: 10px;
+}
+#mainlist .right .name {
+  font-weight: bolder;
+  font-size: 20px;
+}
+#mainlist .right .content {
+  font-size: 14px;
+}

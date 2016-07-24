@@ -54,4 +54,24 @@ angular.module('loginControllers',[])
         myPopup.close();
       }, 1000);
     };
+    $scope.doRegister=function(){
+      $ionicLoading.show({
+        delay:200
+      });
+      $loginData.reg(this.user).success(function(data){
+        $ionicLoading.hide();
+        if(data.success === 0){
+          $scope.showErrorMesPopup(data.msg);
+        }else{
+          //成功，把token存入localStorage
+          $window.localStorage.accesstoken=data.token;
+          //$ionicHistory.goBack(-1);
+          $scope.modal_reg.hide();
+          $state.go('tab.usercenter');
+        }
+      }).error(function(){
+        $ionicLoading.hide();
+        $scope.showErrorMesPopup('网络连接错误');
+      });
+    }
   }]);
