@@ -64,8 +64,9 @@ angular.module('chatControllers',[])
           type: 'from',
           image: $scope.fromuser.image,
           username: $scope.fromuser.name,
-          mess: $scope.sendMessage
-        }
+          mess: $scope.sendMessage,
+          createAt:new Date()
+        };
         $scope.messages.push(_m);
         var messs=$scope.sendMessage;
         $scope.sendMessage = '';

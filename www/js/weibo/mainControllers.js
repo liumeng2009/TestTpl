@@ -30,7 +30,7 @@ angular.module('mainControllers',[])
                 else{
                   for(var j=0;j<chats.length;j++){
                     if(chatsDB[i].from._id.toString()===chats[j].id.toString()){
-                      chats[j].content=chatsDB.content;
+                      chats[j].content=chatsDB[i].content;
                     }
                     else{
                       if(j===chats.length-1){

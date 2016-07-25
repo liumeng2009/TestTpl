@@ -9,7 +9,8 @@
         <img ng-src="../../img/avata_128.jpg" ng-if="!chat.to.image">
         <div class="right">
           <p class="name">{{chat.name}}</p>
-          <p class="content">{{chat.content}}</p>
+          <p class="content">{{chat.content[0]}}</p>
+          <p>{{chat.content.length}}条新消息</p>
         </div>
       </ion-item>
     </ion-list>
