@@ -9,8 +9,6 @@ angular.module('mainControllers',[])
     $scope.$on('$ionicView.afterEnter',function(){
       //app默认进入页面
       var token=$window.localStorage.accesstoken;
-      var chats=$window.localStorage.chats?JSON.parse($window.localStorage.chats):[];
-      $scope.chats=chats;
       if(token){
         $usercenterData.usercenter({token:token})
           .success(function(data){
@@ -18,68 +16,104 @@ angular.module('mainControllers',[])
               $scope.showErrorMesPopup('网络连接错误',goLogin);
             }
             else{
+              var chats=$window.localStorage[chats+data.user._id]?JSON.parse($window.localStorage[chats+data.user._id]):[];
+              $scope.chats=chats;
               //登录成功之后，登录实时系统
               iosocket.emit('login', {
                 name:data.user.name,
                 _id:data.user._id
               });
+              iosocket.on('to'+data.user._id,function(obj){
+                if(chats.length===0){
+                  var chat={
+                    id:obj.from._id,
+                    name:obj.from.name,
+                    image:obj.from.image,
+                    content:obj.message,
+                    createAt:obj.createAt,
+                    new:true
+                  };
+                  chats.unshift(chat);
+                }
+                for(var i=0;i<chats.length;i++){
+                  if(chats[i].id.toString()===obj.from._id.toString()){
+                    if(chats[i].new){
+                      chats[i].content.unshift(obj.message);
+                    }
+                    else{
+                      chats[i].content=[obj.message];
+                    }
+                    chats[i].new=true;
+
+                  }
+                  else{
+                    if(i===chats.length-1){
+                      //说明没有
+                      var chat={
+                        id:obj.from._id,
+                        name:obj.from.name,
+                        image:obj.from.image,
+                        content:obj.message,
+                        createAt:obj.createAt,
+                        new:true
+                      };
+                      chats.unshift(chat);
+                    }
+                  }
+                }
+                $window.localStorage[chats+data.user._id]=JSON.stringify(chats);
+                $scope.chats=chats;
+                $scope.$apply();
+              })
               $mainData.not_read_list({token:token})
-                .success(function(data){
-                  if(data.success === 0){
-                    $scope.showErrorMesPopup(data.msg,goLogin);
+                .success(function(da){
+                  if(da.success === 0){
+                    $scope.showErrorMesPopup(da.msg,goLogin);
                   }else{
-                    var chatsDB=data.chats;
+                    var chatsDB=da.chats;
                     //这是别人发给他的，但是没查看的
+                    if(chats.length==0&&chatsDB.length>0){
+                      var chat={
+                        id:chatsDB[0].from._id,
+                        name:chatsDB[0].from.name,
+                        image:chatsDB[0].from.image,
+                        content:chatsDB[0].content,
+                        createAt:chatsDB[0].meta.createAt,
+                        new:true
+                      };
+                      chats.push(chat);
+                    }
                     for(var i=0;i<chats.length;i++){
-                      for(var j=0;j<chatsDB.length;j++){
-                        if(chatsDB[j].from._id.toString()===chats[i].id){
-                          chats[i].content=chatsDB[j].content;
+                      //遍历chatdb，如果没有这个id，就将chats里面id符合的条目new=false，
+                      if(chatsDB.length===0){
+                        chats[i].new=false;
+                      }
+                      for(var k=0;k<chatsDB.length;k++){
+                        if(chatsDB[k].from._id.toString()===chats[i].id){
+                          chats[i].content=chatsDB[k].content;
                           chats[i].new=true;
+                          break;
                         }
                         else{
-                          if(j===chatsDB.length-1){
-                            //说明是新的
-
+                          if(k===chatsDB.length-1){
+                            //最后一个，还不等于，说明chat[i]这个里面的东西已经被看过了，
+                            chats[i].new=false;
+                            //chatdb里面是新的
+                            var chat={
+                              id:chatsDB[j].from._id,
+                              name:chatsDB[j].from.name,
+                              image:chatsDB[j].from.image,
+                              content:chatsDB[j].content,
+                              createAt:chatsDB[j].meta.createAt,
+                              new:true
+                            };
+                            chats.push(chat);
                           }
                         }
                       }
                     }
-
-
-                    for(var i=0;i<chatsDB.length;i++){
-                      if(chats.length==0){
-                        var chat={
-                          id:chatsDB[i].from._id,
-                          name:chatsDB[i].from.name,
-                          image:chatsDB[i].from.image,
-                          content:chatsDB[i].content,
-                          createAt:chatsDB[i].meta.createAt
-                        }
-                        chats.push(chat);
-                      }
-                      else{
-                        for(var j=0;j<chats.length;j++){
-                          if(chatsDB[i].from._id.toString()===chats[j].id.toString()){
-                            chats[j].content=chatsDB[i].content;
-                            chats[j].createAt=chatsDB[i].meta.createAt;
-                          }
-                          else{
-                            if(j===chats.length-1){
-                              var chat={
-                                id:chatsDB[i].from._id,
-                                name:chatsDB[i].from.name,
-                                image:chatsDB[i].from.image,
-                                content:chatsDB[i].content,
-                                createAt:chatsDB[i].meta.createAt
-                              }
-                              chats.push(chat);
-                            }
-                          }
-                        }
-                      }
-
-                    }
-                    $window.localStorage.chats=JSON.stringify(chats);
+                    $scope.chats=chats;
+                    $window.localStorage[chats+data.user._id]=JSON.stringify(chats);
                   }
                 })
                 .error(function(){

@@ -1,5 +1,5 @@
 <ion-view view-title="请登录">
-  <ion-header-bar class="bar-positive">
+  <ion-header-bar class="bar-stable">
     <button class="button button-icon icon ion-ios-arrow-left" ng-click="backLeft()"></button>
     <ion-title>登录</ion-title>
     <button class="button" ng-click="showReg()">注册用户</button>
@@ -22,7 +22,7 @@
             <a href="/#/findpassword">忘记密码</a>
           </div>
         </div>
-        <button class="button button-full button-positive" ng-disabled="loginForm.$invalid" ng-click="doLogin()">
+        <button class="button button-full button-balanced" ng-disabled="loginForm.$invalid" ng-click="doLogin()">
           登录
         </button>
       </div>
@@ -31,7 +31,7 @@
   </ion-content>
   <script id="templates/reg.html" type="text/ng-template">
     <ion-modal-view>
-      <ion-header-bar class="bar-positive">
+      <ion-header-bar class="bar-stable">
         <button class="button button-icon icon ion-ios-arrow-left" ng-click="hideReg()"></button>
         <ion-title>注册</ion-title>
       </ion-header-bar>
@@ -59,7 +59,7 @@
           <div class="m10">
           <a href="/#/login">已经有账号？</a>
         </div>
-        <button class="button button-full button-positive" ng-click="doRegister()" ng-disabled="regForm.$invalid">
+        <button class="button button-full button-balanced" ng-click="doRegister()" ng-disabled="regForm.$invalid">
           注册
           </button>
           </div>

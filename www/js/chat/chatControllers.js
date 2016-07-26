@@ -15,6 +15,12 @@ angular.module('chatControllers',[])
     $scope.touser={};
     $scope.sendMessage='';
     $scope.$on('$ionicView.afterEnter',function(){
+
+      //iosocket.on('from5794d04de7957f7d9aee21d6to577bc1ffca1d345501cf73b2',function(obj){
+      //  alert(JSON.stringify(obj));
+      //})
+
+
       if($stateParams.to&&$stateParams.from){
         $scope.touser={
           name:$stateParams.to.name,
@@ -45,7 +51,7 @@ angular.module('chatControllers',[])
                     }
                     //走到这里，说明，用户点进了chat页面，将所有的信息status设置为收到了1
                     iosocket.emit('usersaw',{from:$scope.touser._id,to:$scope.fromuser._id});
-                    iosocket.on('connect',function(){
+                    //iosocket.on('connect',function(){
                       iosocket.on('from'+$scope.touser._id+'to'+$scope.fromuser._id,function(obj){
                         var _m={
                           type:'to',
@@ -59,8 +65,9 @@ angular.module('chatControllers',[])
                         $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
                         //接到信息后，存入本地存储，用于main页面
                         $scope.saveChat($scope.touser,obj.message,obj.createAt);
+                        iosocket.emit('usersaw',{from:$scope.touser._id,to:$scope.fromuser._id});
                       })
-                    });
+                   // });
                   }
                 })
                 .error(function(){
@@ -88,24 +95,29 @@ angular.module('chatControllers',[])
     };
     $scope.send=function(){
       var token=$window.localStorage.accesstoken;
-      if(token) {
-        iosocket.emit('private message', $stateParams.from._id, $stateParams.to._id, $scope.sendMessage);
-        var _m = {
-          type: 'from',
-          image: $scope.fromuser.image,
-          username: $scope.fromuser.name,
-          mess: $scope.sendMessage,
-          createAt:new Date()
-        };
-        $scope.messages.push(_m);
-        var messs=$scope.sendMessage;
-        $scope.sendMessage = '';
-        $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
-        $scope.saveChat($scope.touser,messs,_m.createAt);
+      if($stateParams.from&&$stateParams.to) {
+        if (token) {
+          iosocket.emit('private message', $stateParams.from._id, $stateParams.to._id, $scope.sendMessage);
+          var _m = {
+            type: 'from',
+            image: $scope.fromuser.image,
+            username: $scope.fromuser.name,
+            mess: $scope.sendMessage,
+            createAt: Date.now()
+          };
+          $scope.messages.push(_m);
+          var messs = $scope.sendMessage;
+          $scope.sendMessage = '';
+          $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
+          $scope.saveChat($scope.touser, messs, _m.createAt);
 
+        }
+        else {
+          $state.go('login');
+        }
       }
       else{
-        $state.go('login');
+        $state.go('tab.main');
       }
     };
     $scope.saveChat=function(user,content,cdate){
@@ -119,7 +131,8 @@ angular.module('chatControllers',[])
           name: user.name,
           image: user.image,
           content: [content],
-          createAt: cdate
+          createAt: cdate,
+          new:false
         }
         chats.push(chat);
         $window.localStorage.chats = JSON.stringify(chats);
@@ -127,7 +140,9 @@ angular.module('chatControllers',[])
       else{
         for (var i = 0; i < chats.length; i++) {
           if (chats[i].id === user._id) {
-            chats[i].content = new Array[content];
+            chats[i].content = [content];
+            chats[i].createAt=cdate;
+            chats[i].new=false;
             $window.localStorage.chats= JSON.stringify(chats);
           }
           else if(i===chats.length-1){
@@ -136,7 +151,8 @@ angular.module('chatControllers',[])
               name:user.name,
               image:user.image,
               content:content,
-              createAt:cdate
+              createAt:cdate,
+              new:false
             }
             chats.push(chat);
             $window.localStorage.chats= JSON.stringify(chats);
@@ -146,7 +162,7 @@ angular.module('chatControllers',[])
 
     }
     $rootScope.$on('$stateChangeStart',function(){
-      iosocket.emit('logout',$stateParams.from._id);
+      //iosocket.emit('logout',$stateParams.from._id);
     });
     $scope.goMain=function(){
       $state.go('tab.main');
