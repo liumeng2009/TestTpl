@@ -1,4 +1,4 @@
-<ion-view>
+<ion-view view-title="青青晓园">
   <ion-header-bar class="bar-stable">
     <ion-title>晓园</ion-title>
   </ion-header-bar>
@@ -7,10 +7,15 @@
       <ion-item ng-repeat="chat in chats" ng-click="chatwidth('{{chat.id}}','{{chat.name}}')">
         <img ng-src="chat.to.image" ng-if="chat.to.image">
         <img ng-src="../../img/avata_128.jpg" ng-if="!chat.to.image">
+        <div class="new">{{chat.content.length| mynum}}</div>
         <div class="right">
-          <p class="name">{{chat.name}}</p>
+          <div class="name">
+            {{chat.name}}
+            <div class="date">
+              {{chat.createAt | mydate}}
+            </div>
+          </div>
           <p class="content">{{chat.content[0]}}</p>
-          <p>{{chat.content.length}}条新消息</p>
         </div>
       </ion-item>
     </ion-list>

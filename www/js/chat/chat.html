@@ -1,6 +1,6 @@
 <ion-view>
   <ion-header-bar align-title="center">
-    <button class="button button-icon icon ion-ios-arrow-left">
+    <button class="button button-icon icon ion-ios-arrow-left" ng-click="goMain()">
       {{touser.name}}
     </button>
   </ion-header-bar>
@@ -20,7 +20,10 @@
             </td>
             <td style="vertical-align: top;word-break: break-all">
               <div class="chat">
-                <span>{{message.mess}}</span>
+                <span>
+                  {{message.mess}}<br>
+                </span>
+                <label>{{message.createAt|mydate}}</label>
               </div>
             </td>
           </tr>
@@ -29,7 +32,10 @@
           <tr>
             <td style="vertical-align: top;word-break: break-all">
               <div class="chat">
-                <span>{{message.mess}}</span>
+                <span>
+                  {{message.mess}}<br>
+                </span>
+                <label>{{message.createAt|mydate}}</label>
               </div>
             </td>
             <td style="vertical-align: top;width:60px;">

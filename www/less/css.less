@@ -150,6 +150,11 @@
         border-radius: 10px;
         background-color: #fff;
         position:relative;
+        font-size:14px;
+      }
+      label{
+        color:#999;
+        float:left;
       }
       span:before{
         content:'';
@@ -193,6 +198,11 @@
         background-color:#33cd5f;
         color:#000;
         position:relative;
+        font-size:14px;
+      }
+      label{
+        color:#999;
+        float:right;
       }
       span:before{
         content:'';
@@ -209,22 +219,52 @@
 }
 
 #mainlist{
-  img{
-    width:48px;
-    height:48px;
-    float:left;
-  }
-  .right{
-    float:left;
-    margin-left: 10px;
-    .name{
-      font-weight:bolder;
-      font-size: 20px;
+  .item{
+    padding:10px;
+    background-color: #fefefe;
+    img{
+      width:72px;
+      height:72px;
+      float:left;
+      border:#eeeeee 1px solid;
+      box-shadow: 1px 1px 1px #ccc;
     }
-    .content{
+    .new{
+      position:absolute;
+      width:auto;
+      padding:0px 6px;
+      height:20px;
+      border-radius: 12px;
+      color:#fff;
+      background-color:lighten(red,15%);
+      text-align: center;
+      right:10px;
+      bottom:25px;
       font-size:14px;
+      line-height:20px;
+    }
+    .right{
+      margin-left: 15px;
+      .name{
+        margin-left: 70px;
+        font-size: 20px;
+        color:#000;
+        line-height: 36px;
+        .date{
+          float:right;
+          font-size:12px;
+          color:#8f8f8f;
+          line-height:40px;
+        }
+      }
+      .content{
+        margin-left: 70px;
+        font-size:14px;
+        color:#8f8f8f;
+      }
     }
   }
+
 
 }
 
