@@ -21,7 +21,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       StatusBar.styleDefault();
     }
 
-    iosocket = io.connect('http://localhost:3000');
+    iosocket = io.connect('http://localhost:3000',{reconnect:true});
 
   });
 })

@@ -126,6 +126,7 @@
 #incomingChatMessages table.to .user span {
   width: 70px;
   text-align: center;
+  word-wrap: initial;
 }
 #incomingChatMessages table.to .chat {
   float: left;
@@ -172,6 +173,7 @@
 #incomingChatMessages table.from .user span {
   width: 70px;
   text-align: center;
+  word-wrap: initial;
 }
 #incomingChatMessages table.from .chat {
   float: right;
@@ -237,12 +239,16 @@
   font-size: 20px;
   color: #000;
   line-height: 36px;
+  position: relative;
 }
 #mainlist .item .right .name .date {
   float: right;
   font-size: 12px;
   color: #8f8f8f;
   line-height: 40px;
+  position: absolute;
+  top: 0px;
+  right: 0px;
 }
 #mainlist .item .right .content {
   margin-left: 70px;

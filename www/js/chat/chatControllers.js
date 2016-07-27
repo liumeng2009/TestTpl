@@ -16,10 +16,6 @@ angular.module('chatControllers',[])
     $scope.sendMessage='';
     $scope.$on('$ionicView.afterEnter',function(){
 
-      //iosocket.on('from5794d04de7957f7d9aee21d6to577bc1ffca1d345501cf73b2',function(obj){
-      //  alert(JSON.stringify(obj));
-      //})
-
 
       if($stateParams.to&&$stateParams.from){
         $scope.touser={
@@ -52,6 +48,7 @@ angular.module('chatControllers',[])
                     //走到这里，说明，用户点进了chat页面，将所有的信息status设置为收到了1
                     iosocket.emit('usersaw',{from:$scope.touser._id,to:$scope.fromuser._id});
                     //iosocket.on('connect',function(){
+                      iosocket.send('hi');
                       iosocket.on('from'+$scope.touser._id+'to'+$scope.fromuser._id,function(obj){
                         var _m={
                           type:'to',
@@ -67,7 +64,7 @@ angular.module('chatControllers',[])
                         $scope.saveChat($scope.touser,obj.message,obj.createAt);
                         iosocket.emit('usersaw',{from:$scope.touser._id,to:$scope.fromuser._id});
                       })
-                   // });
+                    //});
                   }
                 })
                 .error(function(){
@@ -122,9 +119,9 @@ angular.module('chatControllers',[])
     };
     $scope.saveChat=function(user,content,cdate){
       //发送完毕后，将对象存入本地存储，体现在main页面
-      var chats = $window.localStorage.chats? JSON.parse($window.localStorage.chats):[];
-      if(!$window.localStorage.chats) {
-        $window.localStorage.chats = [];
+      var chats = $window.localStorage[$stateParams.from._id]? JSON.parse($window.localStorage[$stateParams.from._id]):[];
+      if(!$window.localStorage[$stateParams.from._id]) {
+        $window.localStorage[$stateParams.from._id] = [];
         //说明没有和这个人说过，需要存入新的对象
         var chat = {
           id: user._id,
@@ -135,7 +132,7 @@ angular.module('chatControllers',[])
           new:false
         }
         chats.push(chat);
-        $window.localStorage.chats = JSON.stringify(chats);
+        $window.localStorage[$stateParams.from._id] = JSON.stringify(chats);
       }
       else{
         for (var i = 0; i < chats.length; i++) {
@@ -143,7 +140,8 @@ angular.module('chatControllers',[])
             chats[i].content = [content];
             chats[i].createAt=cdate;
             chats[i].new=false;
-            $window.localStorage.chats= JSON.stringify(chats);
+            $window.localStorage[$stateParams.from._id]= JSON.stringify(chats);
+            break;
           }
           else if(i===chats.length-1){
             var chat={
@@ -155,7 +153,9 @@ angular.module('chatControllers',[])
               new:false
             }
             chats.push(chat);
-            $window.localStorage.chats= JSON.stringify(chats);
+            break;
+            //i++;
+            $window.localStorage[$stateParams.from._id]= JSON.stringify(chats);
           }
         }
       }
