@@ -51,11 +51,11 @@
     </ion-list>
   </ion-content>
   <ion-footer-bar>
-      <form role="form" class="item-input-inset" style="width:100%">
+      <form role="form" name="chatForm" class="item-input-inset" style="width:100%">
         <label class="item-input-wrapper">
-          <input type="text" id="outgoingChatMessage" placeholder="输入信息 ..." ng-value="sendMessage" ng-model="sendMessage">
+          <input style="width:100%" type="text" id="outgoingChatMessage" placeholder="输入信息 ..." ng-value="sendMessage" ng-model="sendMessage" required>
         </label>
-        <button type="submit" class="button button-balanced" ng-click="send()">
+        <button type="submit" class="button button-balanced" ng-click="send()" ng-disabled="chatForm.$invalid">
           发送
         </button>
       </form>

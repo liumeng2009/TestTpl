@@ -23,9 +23,9 @@ angular.module('mainControllers',[])
                 name:data.user.name,
                 _id:data.user._id
               });
-              iosocket.send('hi');
-              //iosocket.on('connect',function(){
-                iosocket.on('to'+data.user._id,function(obj){
+              //iosocket.send('hi');
+              //iosocket.on('connection',function(iosockett){
+              iosocket.on('to'+data.user._id,function(obj){
                   if(chats.length===0){
                     var chat={
                       id:obj.from._id,
@@ -44,11 +44,19 @@ angular.module('mainControllers',[])
                         if(chats[i].new){
                           chats[i].content.unshift(obj.message);
                           chats[i].new=true;
+                          //置前
+                          var c=chats[i];
+                          chats.splice(i,1);
+                          chats.unshift(c);
                           break;
                         }
                         else{
                           chats[i].content=[obj.message];
                           chats[i].new=true;
+                          //置前
+                          var c=chats[i];
+                          chats.splice(i,1);
+                          chats.unshift(c);
                           break;
                         }
 
@@ -76,7 +84,7 @@ angular.module('mainControllers',[])
                   $scope.chats=chats;
                   $scope.$apply();
                 })
-              //})
+             // })
 
 
 
@@ -115,24 +123,7 @@ angular.module('mainControllers',[])
                           }
                           else{
                             if(k===chatsDB.length-1){
-                              //
                               chats[i].new=false;
-                              /*
-                              //最后一个，还不等于，说明chat[i]这个里面的东西已经被看过了，
-                              chats[i].new=false;
-                              //chatdb里面是新的
-                              var chat={
-                                id:chatsDB[k].from._id,
-                                name:chatsDB[k].from.name,
-                                image:chatsDB[k].from.image,
-                                content:chatsDB[k].content,
-                                createAt:chatsDB[k].meta.createAt,
-                                new:true
-                              };
-                              chats.push(chat);
-                              //i++;
-                              */
-
                             }
                           }
                         }

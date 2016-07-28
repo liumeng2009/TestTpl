@@ -22,7 +22,7 @@ angular.module('starter.filters', [])
         out='昨天'+(dateInput.getHours())+':'+dateInput.getMinutes();
       }
       else{
-        out=(dateInput.getHours())+':'+dateInput.getMinutes();
+        out=dateInput.getFullYear()+'年'+(dateInput.getMonth()+1)+'月'+dateInput.getDate()+'日 '+(dateInput.getHours())+':'+dateInput.getMinutes();
       }
       return out;
     }
