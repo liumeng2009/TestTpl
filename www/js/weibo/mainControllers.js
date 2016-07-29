@@ -25,6 +25,10 @@ angular.module('mainControllers',[])
               });
               //iosocket.send('hi');
               //iosocket.on('connection',function(iosockett){
+              //iosocket.on('userlist',function(obj){
+              //  $rootScope.onlineUser=obj.userlist;
+              //});
+
               iosocket.on('to'+data.user._id,function(obj){
                   if(chats.length===0){
                     var chat={

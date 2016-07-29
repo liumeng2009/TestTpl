@@ -44,6 +44,20 @@ angular.module('chatControllers',[])
                       _id:data.user._id,
                       image:data.user.image
                     }
+                    //加载在线情况
+                    iosocket.emit('askuserlist',$scope.touser._id);
+
+                    iosocket.on('ansuserlist'+$scope.touser._id.toString(),function(obj){
+                      if(obj.toString()==='0'){
+                        $scope.online=false;
+                        $scope.$apply();
+                      }
+                      else{
+                        $scope.online=true;
+                        $scope.$apply();
+                      }
+                    });
+
 
                     //加载聊天记录 有新纪录，就把新纪录全部加载完成
                     $mainData.not_read_list_to({token:token,fromid:$stateParams.to._id})

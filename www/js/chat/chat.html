@@ -2,6 +2,8 @@
   <ion-header-bar align-title="center">
     <button class="button button-icon icon ion-ios-arrow-left" ng-click="goMain()">
       {{touser.name}}
+      <span ng-if="online">在线</span>
+      <span ng-if="!online">不在线</span>
     </button>
   </ion-header-bar>
   <ion-content style="background-color: #f8f8f8"  delegate-handle="chatScroll">

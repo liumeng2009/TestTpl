@@ -23,6 +23,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
 
     iosocket = io.connect('http://localhost:3000',{'reconnect':true,'force new connection': true});
 
+
+
   });
 })
 
