@@ -17,6 +17,50 @@ angular.module('childrenControllers',[])
               $scope.showErrorMesPopup(data.msg);
             }else{
               $scope.students=data.students;
+              //确定studentnow
+              if($window.localStorage.studentnow){
+                if($scope.students.length>0) {
+                  for (var i = 0; i < $scope.students.length; i++) {
+                    if ($scope.students[i]._id.toString() === $window.localStorage.studentnow) {
+                      $scope.studentnow = $scope.students[i];
+                      break;
+                    }
+                    else {
+                      //$scope.studentnow = $scope.students[0];
+                      //$window.localStorage.studentnow=$scope.students[0]._id;
+                    }
+                  }
+                }
+                else{
+                  $scope.studentnow=false;
+                }
+              }
+              else{
+                if($scope.students.length>0){
+                  $scope.studentnow=$scope.students[0];
+                  $window.localStorage.studentnow=$scope.students[0]._id;
+                }
+
+
+                else
+                  $scope.studentnow=false;
+              }
+              //根据studentnow来绑定list
+              if($scope.studentnow!=0){
+                $childrenData.chat_list({token:token,studentid:$scope.studentnow._id})
+                  .success(function(data){
+                    $ionicLoading.hide();
+                    $scope.users=data.users;
+                  })
+                  .error(function(){
+                    $ionicLoading.hide();
+                    $scope.showErrorMesPopup('网络连接错误');
+                  });
+              }
+              else{
+                $scope.nostudent=true;
+              }
+
             }
           })
           .error(function(){
@@ -116,35 +160,17 @@ angular.module('childrenControllers',[])
     }).then(function(modal) {
       $scope.modal = modal;
     });
-    $ionicModal.fromTemplateUrl('templates/modal_chat_list.html', {
+    $ionicModal.fromTemplateUrl('templates/modal_student_select.html', {
       scope: $scope,
       animation: 'slide-in-up'
     }).then(function(modal) {
-      $scope.modal_chat = modal;
+      $scope.modal_Student_Select = modal;
     });
     $scope.openModal=function(schoolid){
       $scope.modal.show();
     }
-    $scope.showChatModal=function(studentid){
-      $scope.modal_chat.show();
-      var token=$window.localStorage.accesstoken;
-      $ionicLoading.show({
-        delay:300
-      });
-      if(token){
-        $childrenData.chat_list({token:token,studentid:studentid})
-          .success(function(data){
-            $ionicLoading.hide();
-            $scope.users=data.users;
-          })
-          .error(function(){
-            $ionicLoading.hide();
-            $scope.showErrorMesPopup('网络连接错误');
-          });
-      }
-      else{
-
-      }
+    $scope.openStudentSelectModal=function(studentid){
+      $scope.modal_Student_Select.show();
     }
     $scope.setSchoolNow=function(){
       $scope.orgnow.sname=this.school.name;
@@ -158,7 +184,7 @@ angular.module('childrenControllers',[])
     };
     $rootScope.$on('$stateChangeStart',function(){
       $scope.modal.hide();
-      $scope.modal_chat.hide();
+      $scope.modal_Student_Select.hide();
     });
     //显示错误信息
     $scope.showErrorMesPopup = function(title) {
@@ -181,7 +207,18 @@ angular.module('childrenControllers',[])
         $childrenData.add({token:token,child:child})
           .success(function(data){
             $ionicLoading.hide();
-            alert(data);
+            $scope.modal.hide();
+            $scope.studentnow=data.student;
+            $window.localStorage.studentnow=data.student._id;
+            $childrenData.chat_list({token: token, studentid:data.student._id})
+              .success(function (data) {
+                $ionicLoading.hide();
+                $scope.users = data.users;
+              })
+              .error(function () {
+                $ionicLoading.hide();
+                $scope.showErrorMesPopup('网络连接错误');
+              });
           })
           .error(function(){
             $ionicLoading.hide();
@@ -218,6 +255,30 @@ angular.module('childrenControllers',[])
       }
       else{
 
+      }
+    }
+    $scope.select_student=function(id){
+      var token=$window.localStorage.accesstoken;
+      if(token) {
+        for (var i = 0; i < $scope.students.length; i++) {
+          if ($scope.students[i]._id.toString() === id.toString()) {
+            $scope.studentnow = $scope.students[i];
+            $window.localStorage.studentnow=id.toString();
+            $childrenData.chat_list({token: token, studentid: id})
+              .success(function (data) {
+                $ionicLoading.hide();
+                $scope.users = data.users;
+              })
+              .error(function () {
+                $ionicLoading.hide();
+                $scope.showErrorMesPopup('网络连接错误');
+              });
+          }
+        }
+        $scope.modal_Student_Select.hide();
+      }
+      else{
+        $state.go('login');
       }
     }
   }]);

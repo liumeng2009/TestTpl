@@ -1,10 +1,33 @@
 <ion-view view-title="我的孩子">
   <ion-header-bar align-title="center" class="bar-stable">
-    <h1 class="title">学生列表</h1>
     <div class="buttons">
       <button class="button" ng-click="openModal()">添加</button>
-    </div></ion-header-bar>
+    </div>
+    <ion-title ng-if="studentnow">{{studentnow.name}} {{studentnow.grade.name}}</ion-title>
+    <div class="buttons">
+      <button class="button" ng-click="openStudentSelectModal()" ng-if="students.length>1">切换学生</button>
+    </div>
+  </ion-header-bar>
   <ion-content>
+    <span ng-if="!studentnow">您还没有添加学生信息</span>
+    <ion-list ng-repeat="user in users">
+      <div class="item item-button-right">
+        <label ng-if="user.nickname">
+          {{user.nickname}}
+        </label>
+        <label ng-if="!user.nickname">
+          {{user.name}}
+        </label>
+        (
+        <label ng-repeat="son in user.sons">
+          {{son.name}}
+        </label>
+        的
+        <label>{{user.roles[0].role.name}}</label>)
+        <button class="button" ng-click="chatWithUser('{{user._id}}','{{user.name}}')"><i class="icon ion-ios-chatbubble"></i></button>
+      </div>
+    </ion-list>
+    <!--
     <div class="list card" ng-repeat="student in students">
       <div class="item item-avatar">
         <img ng-src="http://127.0.0.1:3000/{{student.image}}" ng-if="student.image">
@@ -19,6 +42,7 @@
         </p>
       </div>
     </div>
+    -->
   </ion-content>
 
   <script id="templates/modal_children_add.html" type="text/ng-template">
@@ -76,31 +100,17 @@
     </ion-modal-view>
   </script>
 
-  <script id="templates/modal_chat_list.html" type="text/ng-template">
+  <script id="templates/modal_student_select.html" type="text/ng-template">
     <ion-modal-view>
       <ion-header-bar align-title="center" class="bar-stable">
         <div class="buttons">
-          <button class="button" ng-click="modal_chat.hide()">取消</button>
+          <button class="button" ng-click="modal_Student_Select.hide()">取消</button>
         </div>
       </ion-header-bar>
       <ion-content>
-        <ion-list ng-repeat="user in users">
-          <div class="item item-button-right">
-            <label ng-if="user.nickname">
-              {{user.nickname}}
-            </label>
-            <label ng-if="!user.nickname">
-              {{user.name}}
-            </label>
-            (
-            <label ng-repeat="son in user.sons">
-              {{son.name}}
-            </label>
-            的
-            <label>{{user.roles[0].role.name}}</label>)
-            <button class="button" ng-click="chatWithUser('{{user._id}}','{{user.name}}')"><i class="icon ion-ios-chatbubble"></i></button>
-          </div>
-        </ion-list>
+        <ion-item ng-repeat="student in students" ng-click="select_student('{{student._id}}')">
+          {{student.name}} {{student.school.name}} {{student.grade.name}}
+        </ion-item>
       </ion-content>
 
     </ion-modal-view>

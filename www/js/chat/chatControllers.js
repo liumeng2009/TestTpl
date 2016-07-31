@@ -42,20 +42,15 @@ angular.module('chatControllers',[])
                     $scope.touser={
                       name:data.user.name,
                       _id:data.user._id,
-                      image:data.user.image
+                      image:data.user.image,
+                      online:data.user.online
                     }
-                    //加载在线情况
-                    iosocket.emit('askuserlist',$scope.touser._id);
+                    //查看这个人的在线情况
+                    //iosocket.emit('askuserlist',[$scope.touser._id]);
 
                     iosocket.on('ansuserlist'+$scope.touser._id.toString(),function(obj){
-                      if(obj.toString()==='0'){
-                        $scope.online=false;
+                        $scope.touser.online=obj.online;
                         $scope.$apply();
-                      }
-                      else{
-                        $scope.online=true;
-                        $scope.$apply();
-                      }
                     });
 
 

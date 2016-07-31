@@ -210,6 +210,14 @@
   padding: 10px;
   background-color: #fefefe;
 }
+#mainlist .item .offline img {
+  -webkit-filter: grayscale(100%);
+  -moz-filter: grayscale(100%);
+  -ms-filter: grayscale(100%);
+  -o-filter: grayscale(100%);
+  filter: grayscale(100%);
+  filter: gray;
+}
 #mainlist .item img {
   width: 72px;
   height: 72px;
@@ -254,4 +262,18 @@
   margin-left: 70px;
   font-size: 14px;
   color: #8f8f8f;
+}
+.chat-avatar {
+  width: 12px;
+  height: 12px;
+  background-color: #00b300;
+  border-radius: 100%;
+  display: inline-block;
+}
+.chat-avatar-gray {
+  width: 12px;
+  height: 12px;
+  background-color: #ccc;
+  border-radius: 100%;
+  display: inline-block;
 }

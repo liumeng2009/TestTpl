@@ -17,6 +17,14 @@ angular.module('usercenterServices',[])
           url:url,
           type:'GET'
         })
+      },
+      check_online:function(requestParams){
+        var url=config.basePath+'check_online?token='+requestParams.token;
+        return $http({
+          url:url,
+          method:'POST',
+          data:{array:requestParams.array}
+        })
       }
     }
   });

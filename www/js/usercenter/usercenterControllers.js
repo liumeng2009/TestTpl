@@ -12,6 +12,11 @@ angular.module('usercenterControllers',[])
               $scope.showErrorMesPopup(data.msg);
             }else{
               $scope.user=data.user;
+              //登录成功之后，登录实时系统
+              iosocket.emit('login', {
+                name:data.user.name,
+                _id:data.user._id
+              });
             }
           })
           .error(function(){
@@ -31,6 +36,8 @@ angular.module('usercenterControllers',[])
       }, 1000);
     };
     $scope.logout=function(){
+      //告诉实时服务器
+      iosocket.emit('logout',$scope.user._id);
       $window.localStorage.accesstoken=undefined;
       $scope.user=undefined;
     }

@@ -30,6 +30,7 @@ angular.module('mainControllers',[])
               //});
 
               iosocket.on('to'+data.user._id,function(obj){
+                  var chats=$window.localStorage[data.user._id]?JSON.parse($window.localStorage[data.user._id]):[];
                   if(chats.length===0){
                     var chat={
                       id:obj.from._id,
@@ -47,6 +48,7 @@ angular.module('mainControllers',[])
                       if(chats[i].id.toString()===obj.from._id.toString()){
                         if(chats[i].new){
                           chats[i].content.unshift(obj.message);
+                          chats[i].createAt=obj.createAt;
                           chats[i].new=true;
                           //置前
                           var c=chats[i];
@@ -56,6 +58,7 @@ angular.module('mainControllers',[])
                         }
                         else{
                           chats[i].content=[obj.message];
+                          chats[i].createAt=obj.createAt;
                           chats[i].new=true;
                           //置前
                           var c=chats[i];
@@ -86,11 +89,13 @@ angular.module('mainControllers',[])
 
                   $window.localStorage[data.user._id]=JSON.stringify(chats);
                   $scope.chats=chats;
+
+                  $scope.check_online();
+
+
                   $scope.$apply();
                 })
              // })
-
-
 
               $mainData.not_read_list({token:token})
                 .success(function(da){
@@ -145,10 +150,9 @@ angular.module('mainControllers',[])
                         chats.push(chat);
                       }
                     }
-
+                    $scope.check_online();
                     $scope.chats=chats;
                     $window.localStorage[data.user._id]=JSON.stringify(chats);
-                    //$scope.$apply();
                   }
                 })
                 .error(function(){
@@ -204,4 +208,44 @@ angular.module('mainControllers',[])
           cb();
       }, 1000);
     };
+    $scope.check_online=function(){
+      var token=$window.localStorage.accesstoken;
+      //所有的chats查询在线情况
+      if($scope.chats.length>0) {
+        var ul = [];
+        for (var i = 0; i < $scope.chats.length; i++) {
+          var _u = {
+            _id: $scope.chats[i].id.toString(),
+          }
+          ul.push(_u);
+          iosocket.on('ansuserlist'+$scope.chats[i].id,function(obj){
+            for(var i=0;i<$scope.chats.length;i++){
+              if(obj._id.toString()===$scope.chats[i].id.toString()){
+                $scope.chats[i].online=obj.online;
+                $scope.$apply();
+              }
+            }
+          });
+        }
+        $usercenterData.check_online({token: token, array: ul})
+          .success(function (data) {
+            var onlineResult = data.users;
+            for (var i = 0; i < $scope.chats.length; i++) {
+              for (var j = 0; j < onlineResult.length; j++) {
+                if ($scope.chats[i].id.toString() === onlineResult[j]._id) {
+                  $scope.chats[i].online = onlineResult[j].online;
+                }
+              }
+            }
+            //排序 在线的前置，
+
+
+
+
+          })
+          .error(function (err) {
+            //alert(err);
+          })
+      }
+    }
   }]);
