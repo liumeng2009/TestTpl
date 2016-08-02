@@ -1,8 +1,8 @@
 /**
  * Created by Administrator on 2016/7/22.
  */
-angular.module('mainControllers',[])
-  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window){
+angular.module('mainControllers',['ngCordova'])
+  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaDialogs',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaDialogs){
     var goLogin=function(){
       $state.go('login');
     }
@@ -199,6 +199,13 @@ angular.module('mainControllers',[])
       }
     }
     $scope.showErrorMesPopup = function(title,cb) {
+      /*
+      $cordovaDialogs.alert('message', title, 'ok')
+        .then(function() {
+          // callback success
+        });
+        */
+      /*
       var myPopup = $ionicPopup.show({
         title: '<b>'+title+'</b>'
       });
@@ -207,6 +214,7 @@ angular.module('mainControllers',[])
         if(cb)
           cb();
       }, 1000);
+      */
     };
     $scope.check_online=function(){
       var token=$window.localStorage.accesstoken;

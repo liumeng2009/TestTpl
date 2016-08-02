@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/6/29.
  */
 angular.module('usercenterControllers',[])
-  .controller('UserCenterCtrl',['$scope','$rootScope','$state','$usercenterData','$ionicLoading','$ionicPopup','$timeout','$window',function($scope,$rootScope,$state,$usercenterData,$ionicLoading,$ionicPopup,$timeout,$window){
+  .controller('UserCenterCtrl',['$scope','$rootScope','$state','$usercenterData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaDialogs',function($scope,$rootScope,$state,$usercenterData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaDialogs){
     $scope.$on('$ionicView.afterEnter',function(){
       var token=$window.localStorage.accesstoken;
       if(token){
@@ -28,17 +28,28 @@ angular.module('usercenterControllers',[])
       }
     });
     $scope.showErrorMesPopup = function(title) {
+      /*
+      $cordovaDialogs.alert('message', title, 'ok')
+        .then(function() {
+          // callback success
+        });
+        */
+      /*
       var myPopup = $ionicPopup.show({
         title: '<b>'+title+'</b>'
       });
       $timeout(function() {
         myPopup.close(); // 2秒后关闭
       }, 1000);
+      */
     };
     $scope.logout=function(){
       //告诉实时服务器
       iosocket.emit('logout',$scope.user._id);
       $window.localStorage.accesstoken=undefined;
       $scope.user=undefined;
+    }
+    $scope.goLogin=function(){
+      $state.go('login');
     }
   }]);

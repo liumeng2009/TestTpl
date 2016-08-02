@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/6/27.
  */
 angular.module('loginControllers',[])
-  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory){
+  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaDialogs',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaDialogs){
     $ionicModal.fromTemplateUrl('templates/reg.html', {
       scope: $scope,
       animation: 'slide-in-up'
@@ -47,12 +47,18 @@ angular.module('loginControllers',[])
       });
     }
     $scope.showErrorMesPopup = function(title) {
+      $cordovaDialogs.alert('message', title, 'ok')
+        .then(function() {
+          // callback success
+        });
+      /*
       var myPopup = $ionicPopup.show({
         title: title
       });
       $timeout(function() {
         myPopup.close();
       }, 1000);
+      */
     };
     $scope.doRegister=function(){
       $ionicLoading.show({
