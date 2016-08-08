@@ -6,7 +6,6 @@ angular.module('loginServices',[])
     return {
       login:function(requestParams){
         var url=config.basePath+'signin?username='+requestParams.username+'&password='+requestParams.password;
-        alert(url);
         return $http({
           url:url,
           method:'GET'

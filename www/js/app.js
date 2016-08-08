@@ -5,7 +5,7 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','starter.filters','ionic-native-transitions'])
+angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','starter.filters','starter.directives','ionic-native-transitions'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -31,7 +31,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
 .config(function($stateProvider, $urlRouterProvider,$ionicConfigProvider,$sceDelegateProvider,$ionicNativeTransitionsProvider) {
 
   $ionicNativeTransitionsProvider.setDefaultOptions({
-    duration: 400, // in milliseconds (ms), default 400,
+    duration: 200, // in milliseconds (ms), default 400,
     slowdownfactor: 4, // overlap views (higher number is more) or no overlap (1), default 4
     iosdelay: -1, // ms to wait for the iOS webview to update before animation kicks in, default -1
     androiddelay: -1, // same as above but for Android, default -1
@@ -114,14 +114,9 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
         templateUrl: 'js/weibo/main.html',
         controller:'MainCtrl'
       }
-    }
-  })
-  .state('tab.message', {
-    url: '/message',
-    views: {
-      'tab-message': {
-        templateUrl: 'js/message/message.html'
-      }
+    },
+    nativeTransitions:{
+      type:'fade'
     }
   })
 
@@ -132,6 +127,9 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
           templateUrl: 'js/children/children.html',
           controller:'ChildrenCtrl'
         }
+      },
+      nativeTransitions:{
+        type:'fade'
       }
     })
     .state('tab.usercenter', {
@@ -141,6 +139,9 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
           templateUrl: 'js/usercenter/usercenter.html',
           controller:'UserCenterCtrl'
         }
+      },
+      nativeTransitions:{
+        type:'fade'
       }
     })
     .state('school_list',{

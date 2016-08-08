@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/6/27.
  */
 angular.module('loginControllers',[])
-  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaLocalNotification','$cordovaToast',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaLocalNotification,$cordovaToast){
+  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaLocalNotification','$cordovaToast','$cordovaKeyboard','$cordovaSQLite',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaLocalNotification,$cordovaToast,$cordovaKeyboard,$cordovaSQLite){
     $ionicModal.fromTemplateUrl('templates/reg.html', {
       scope: $scope,
       animation: 'slide-in-up'
@@ -11,6 +11,12 @@ angular.module('loginControllers',[])
     });
     $scope.showReg=function(){
       $scope.modal_reg.show();
+      //开启键盘
+      $cordovaKeyboard.show();
+      $scope.regStart=true;
+    }
+    $scope.showFind=function(){
+      $scope.showErrorMesPopup('未完成');
     }
     $scope.hideReg=function(){
       $scope.modal_reg.hide();
@@ -44,8 +50,21 @@ angular.module('loginControllers',[])
           $scope.showErrorMesPopup(data.success+data.msg);
         }else{
           //成功，把token存入localStorage
-          $window.localStorage.accesstoken=data.token;
-          $scope.scheduleSingleNotification();
+          $window.localStorage.accesstoken=data.user.token;
+          //测试本地通知
+          //$scope.scheduleSingleNotification();
+          //sql存储登录信息
+          var db=$cordovaSQLite.openDB({ name: "sf.db" });
+
+          db.sqlBatch([
+            'CREATE TABLE IF NOT EXISTS tb_login (name,token,image)',
+            [ 'INSERT INTO DemoTable VALUES (?,?)', ['Alice', 101] ]
+          ], function() {
+            console.log('Populated database OK');
+          }, function(error) {
+            console.log('SQL batch ERROR: ' + error.message);
+          });
+
           //登录成功之后，跳转
           if($stateParams.redirectUrl){
             $state.go($stateParams.redirectUrl);
@@ -60,8 +79,6 @@ angular.module('loginControllers',[])
       });
     }
     $scope.showErrorMesPopup = function(title) {
-      //alert(title);
-
       $cordovaToast
         .show(title, 'short', 'center')
         .then(function(success) {
@@ -69,15 +86,6 @@ angular.module('loginControllers',[])
         }, function (error) {
           // error
         });
-
-      /*
-      var myPopup = $ionicPopup.show({
-        title: title
-      });
-      $timeout(function() {
-        myPopup.close();
-      }, 1000);
-      */
     };
     $scope.doRegister=function(){
       $ionicLoading.show({
