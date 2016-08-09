@@ -6,7 +6,7 @@
  */
 var iosocket;
 angular.module('chatControllers',[])
-  .controller('ChatCtrl',['$scope','$rootScope','$sce','$state','$stateParams','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$ionicScrollDelegate','$usercenterData','$mainData',function($scope,$rootScope,$sce,$state,$stateParams,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$ionicScrollDelegate,$usercenterData,$mainData){
+  .controller('ChatCtrl',['$scope','$rootScope','$sce','$state','$stateParams','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$ionicScrollDelegate','$usercenterData','$mainData','$cordovaLocalNotification',function($scope,$rootScope,$sce,$state,$stateParams,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$ionicScrollDelegate,$usercenterData,$mainData,$cordovaLocalNotification){
     var goLogin=function(){
       $state.go('login');
     }
@@ -14,6 +14,18 @@ angular.module('chatControllers',[])
     $scope.fromuser={};
     $scope.touser={};
     $scope.sendMessage='';
+    $scope.scheduleSingleNotification = function () {
+      $cordovaLocalNotification.schedule({
+        id: 1,
+        title: 'Title here',
+        text: 'Text here',
+        data: {
+          customProperty: 'custom value'
+        }
+      }).then(function (result) {
+        // ...
+      });
+    };
     $scope.$on('$ionicView.afterEnter',function(){
       if($stateParams.to&&$stateParams.from){
         $scope.touser={
@@ -122,6 +134,11 @@ angular.module('chatControllers',[])
                                   $scope.messages.push(_m);
                                   $scope.$apply();
                                   $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
+
+                                  $scope.scheduleSingleNotification();
+
+
+
                                   //接到信息后，存入本地存储，用于main页面
                                   $scope.saveChat($scope.touser,obj.message,obj.createAt);
                                   iosocket.emit('usersaw',{from:$scope.touser._id,to:$scope.fromuser._id});
