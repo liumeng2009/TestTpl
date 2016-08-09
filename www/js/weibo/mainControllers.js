@@ -2,10 +2,7 @@
  * Created by Administrator on 2016/7/22.
  */
 angular.module('mainControllers',['ngCordova'])
-  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaDialogs',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaDialogs){
-    var goLogin=function(){
-      $state.go('login');
-    }
+  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast){
     $scope.$on('$ionicView.afterEnter',function(){
       //app默认进入页面
       var token=$window.localStorage.accesstoken;
@@ -13,7 +10,8 @@ angular.module('mainControllers',['ngCordova'])
         $usercenterData.usercenter({token:token})
           .success(function(data){
             if(data.success===0){
-              $scope.showErrorMesPopup('网络连接错误',goLogin);
+              $state.go('login');
+              $scope.showErrorMesPopup(data.msg);
             }
             else{
               var chats=$window.localStorage[data.user._id]?JSON.parse($window.localStorage[data.user._id]):[];
@@ -165,7 +163,10 @@ angular.module('mainControllers',['ngCordova'])
           })
       }
       else{
-        $state.go('login')
+        $timeout(function(){
+          $state.go('login');
+        },1000);
+
       }
     });
     $scope.chatwidth=function(id,name){
@@ -195,26 +196,23 @@ angular.module('mainControllers',['ngCordova'])
           });
       }
       else{
-        $state.go('login');
+        $ionicNativeTransitions.stateGo('login', {}, {}, {
+          "type": "slide",
+          "direction": "up", // 'left|right|up|down', default 'left' (which is like 'next')
+          "duration": 400, // in milliseconds (ms), default 400
+        });
       }
     }
     $scope.showErrorMesPopup = function(title,cb) {
-      /*
-      $cordovaDialogs.alert('message', title, 'ok')
-        .then(function() {
-          // callback success
-        });
-        */
-      /*
-      var myPopup = $ionicPopup.show({
-        title: '<b>'+title+'</b>'
+      document.addEventListener('deviceready',function(){
+        $cordovaToast
+          .show(title, 'short', 'center')
+          .then(function(success) {
+
+          }, function (error) {
+
+          });
       });
-      $timeout(function() {
-        myPopup.close(); // 2秒后关闭
-        if(cb)
-          cb();
-      }, 1000);
-      */
     };
     $scope.check_online=function(){
       var token=$window.localStorage.accesstoken;
@@ -245,14 +243,9 @@ angular.module('mainControllers',['ngCordova'])
                 }
               }
             }
-            //排序 在线的前置，
-
-
-
-
           })
           .error(function (err) {
-            //alert(err);
+
           })
       }
     }

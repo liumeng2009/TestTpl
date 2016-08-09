@@ -22,12 +22,20 @@
     "cordova-plugin-statusbar",
     "ionic-plugin-keyboard",
     {
-      "locator": "https://github.com/Telerik-Verified-Plugins/NativePageTransitions#0.6.5",
-      "id": "com.telerik.plugins.nativepagetransitions"
-    },
-    {
       "locator": "https://github.com/litehelpers/Cordova-sqlite-storage.git",
       "id": "cordova-sqlite-storage"
+    },
+    {
+      "locator": "https://github.com/EddyVerbruggen/Toast-PhoneGap-Plugin.git",
+      "id": "cordova-plugin-x-toast"
+    },
+    {
+      "locator": "https://github.com/katzer/cordova-plugin-local-notifications.git",
+      "id": "de.appplant.cordova.plugin.local-notification"
+    },
+    {
+      "locator": "https://github.com/Telerik-Verified-Plugins/NativePageTransitions#0.6.5",
+      "id": "com.telerik.plugins.nativepagetransitions"
     }
   ],
   "cordovaPlatforms": [

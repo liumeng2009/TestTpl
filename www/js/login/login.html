@@ -2,7 +2,7 @@
   <ion-content>
 
     <div class="login-logo">
-      <img src="../../img/qqxy_icon_72.png">
+      <img ng-src="img/qqxy_icon_72.png">
     </div>
 
     <form role="form" name="loginForm" novalidate>
@@ -17,7 +17,7 @@
           <i class="ion-close-round padding red" ng-show="loginForm.password.$dirty && loginForm.password.$invalid"></i>
           <i class="ion-checkmark-round padding green" ng-show="loginForm.password.$dirty && loginForm.password.$valid"></i>
         </label>
-        <button class="button button-full button-positive" ng-disabled="loginForm.$invalid" ng-click="doLogin()">
+        <button class="button button-full button-balanced" ng-disabled="loginForm.$invalid" ng-click="doLogin()">
           登录
         </button>
         <div class="row padding">

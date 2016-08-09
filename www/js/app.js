@@ -31,7 +31,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
 .config(function($stateProvider, $urlRouterProvider,$ionicConfigProvider,$sceDelegateProvider,$ionicNativeTransitionsProvider) {
 
   $ionicNativeTransitionsProvider.setDefaultOptions({
-    duration: 200, // in milliseconds (ms), default 400,
+    duration: 400, // in milliseconds (ms), default 400,
     slowdownfactor: 4, // overlap views (higher number is more) or no overlap (1), default 4
     iosdelay: -1, // ms to wait for the iOS webview to update before animation kicks in, default -1
     androiddelay: -1, // same as above but for Android, default -1
@@ -63,7 +63,24 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
   $ionicConfigProvider.views.transition('ios');
   $ionicConfigProvider.tabs.position('bottom');
   $ionicConfigProvider.tabs.style('standard');
-  var configProperties = {
+  var androidConfigProperties = {
+    views: {
+      maxCache: 5,
+      forwardCache: true,
+      transition: 'android'
+    },
+    navBar: {
+    },
+    backButton: {
+      icon: 'ion-chevron-left',
+      text: '&nbsp;',
+      previousTitleText: false
+    },
+    templates: {
+      // maxPrefetch: 0
+    }
+  };
+  var iosConfigProperties = {
     views: {
       maxCache: 5,
       forwardCache: true,
@@ -80,8 +97,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       // maxPrefetch: 0
     }
   };
-  $ionicConfigProvider.setPlatformConfig('ios', configProperties);
-  $ionicConfigProvider.setPlatformConfig('android', configProperties);
+  $ionicConfigProvider.setPlatformConfig('ios', iosConfigProperties);
+  $ionicConfigProvider.setPlatformConfig('android', androidConfigProperties);
   // Ionic uses AngularUI Router which uses the concept of states
   // Learn more here: https://github.com/angular-ui/ui-router
   // Set up the various states which the app can be in.
@@ -92,7 +109,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       url:'/login',
       templateUrl:'js/login/login.html',
       controller:'LoginCtrl',
-      params:{redirectUrl:null}
+      params:{redirectUrl:null},
+      nativeTransitions: {
+        "type": "slide",
+        "direction": "up",
+        "duration":400
+      }
     })
     .state('reg',{
       url:'/reg',
@@ -115,9 +137,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
         controller:'MainCtrl'
       }
     },
-    nativeTransitions:{
-      type:'fade'
-    }
+    nativeTransitions: null
   })
 
   .state('tab.children', {
@@ -128,9 +148,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
           controller:'ChildrenCtrl'
         }
       },
-      nativeTransitions:{
-        type:'fade'
-      }
+      nativeTransitions: null
     })
     .state('tab.usercenter', {
       url: '/usercenter',
@@ -140,9 +158,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
           controller:'UserCenterCtrl'
         }
       },
-      nativeTransitions:{
-        type:'fade'
-      }
+      nativeTransitions:null
     })
     .state('school_list',{
       url:'/school/list',

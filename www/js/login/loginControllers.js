@@ -12,8 +12,8 @@ angular.module('loginControllers',[])
     $scope.showReg=function(){
       $scope.modal_reg.show();
       //开启键盘
-      $cordovaKeyboard.show();
-      $scope.regStart=true;
+      //$cordovaKeyboard.show();
+      //$scope.regStart=true;
     }
     $scope.showFind=function(){
       $scope.showErrorMesPopup('未完成');
@@ -41,29 +41,36 @@ angular.module('loginControllers',[])
       });
     };
     $scope.doLogin=function(){
+      alert(12333333);
       $ionicLoading.show({
         delay:200
       });
+      alert(22222222222222);
       $loginData.login(this.user).success(function(data){
         $ionicLoading.hide();
+        alert(44444444444444);
         if(data.success === 0){
+          alert(5555555555555);
           $scope.showErrorMesPopup(data.success+data.msg);
         }else{
+          alert(66666666666666666);
           //成功，把token存入localStorage
           $window.localStorage.accesstoken=data.user.token;
           //测试本地通知
           //$scope.scheduleSingleNotification();
           //sql存储登录信息
+          /*
           var db=$cordovaSQLite.openDB({ name: "sf.db" });
 
           db.sqlBatch([
             'CREATE TABLE IF NOT EXISTS tb_login (name,token,image)',
             [ 'INSERT INTO DemoTable VALUES (?,?)', ['Alice', 101] ]
           ], function() {
-            console.log('Populated database OK');
+            //console.log('Populated database OK');
           }, function(error) {
-            console.log('SQL batch ERROR: ' + error.message);
+            //console.log('SQL batch ERROR: ' + error.message);
           });
+          */
 
           //登录成功之后，跳转
           if($stateParams.redirectUrl){
@@ -74,11 +81,13 @@ angular.module('loginControllers',[])
           }
         }
       }).error(function(data,status,headers,config){
+        alert(88888888);
         $ionicLoading.hide();
         $scope.showErrorMesPopup('error'+data);
       });
     }
     $scope.showErrorMesPopup = function(title) {
+      alert(99999999999);
       $cordovaToast
         .show(title, 'short', 'center')
         .then(function(success) {
