@@ -17,8 +17,8 @@ angular.module('chatControllers',[])
     $scope.scheduleSingleNotification = function () {
       $cordovaLocalNotification.schedule({
         id: 1,
-        title: 'Title here',
-        text: 'Text here',
+        title: '新消息',
+        text: '这是一条新消息',
         data: {
           customProperty: 'custom value'
         }
