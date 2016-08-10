@@ -41,19 +41,14 @@ angular.module('loginControllers',[])
       });
     };
     $scope.doLogin=function(){
-      alert(12333333);
       $ionicLoading.show({
         delay:200
       });
-      alert(22222222222222);
       $loginData.login(this.user).success(function(data){
         $ionicLoading.hide();
-        alert(44444444444444);
         if(data.success === 0){
-          alert(5555555555555);
           $scope.showErrorMesPopup(data.success+data.msg);
         }else{
-          alert(66666666666666666);
           //成功，把token存入localStorage
           $window.localStorage.accesstoken=data.user.token;
           //测试本地通知
@@ -77,17 +72,15 @@ angular.module('loginControllers',[])
             $state.go($stateParams.redirectUrl);
           }
           else{
-            $state.go('tab.usercenter');
+            $state.go('tab.main');
           }
         }
       }).error(function(data,status,headers,config){
-        alert(88888888);
         $ionicLoading.hide();
         $scope.showErrorMesPopup('error'+data);
       });
     }
     $scope.showErrorMesPopup = function(title) {
-      alert(99999999999);
       $cordovaToast
         .show(title, 'short', 'center')
         .then(function(success) {
