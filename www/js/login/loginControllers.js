@@ -25,6 +25,15 @@ angular.module('loginControllers',[])
       username:'',
       password:''
     }
+    $scope.seePassword=false;
+    $scope.changeSeePassword=function(){
+      if($scope.seePassword){
+        $scope.seePassword=false;
+      }
+      else{
+        $scope.seePassword=true;
+      }
+    }
     $scope.backLeft=function(){
       $state.go(-1);
     }
