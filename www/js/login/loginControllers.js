@@ -75,7 +75,10 @@ angular.module('loginControllers',[])
             //console.log('SQL batch ERROR: ' + error.message);
           });
           */
-
+          iosocket.emit('login', {
+            name:data.user.name,
+            _id:data.user._id
+          });
           //登录成功之后，跳转
           if($stateParams.redirectUrl){
             $state.go($stateParams.redirectUrl);
