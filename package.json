@@ -36,7 +36,8 @@
     {
       "locator": "https://github.com/Telerik-Verified-Plugins/NativePageTransitions#0.6.5",
       "id": "com.telerik.plugins.nativepagetransitions"
-    }
+    },
+    "f:\\angularjs\\pushservice\\plugins"
   ],
   "cordovaPlatforms": [
     "android"

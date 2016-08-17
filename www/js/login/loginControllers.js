@@ -79,6 +79,8 @@ angular.module('loginControllers',[])
             name:data.user.name,
             _id:data.user._id
           });
+          //登陆成功，调用推送服务
+          window.pushservice.startService({_id:data.user._id,name:data.user.name});
           //登录成功之后，跳转
           if($stateParams.redirectUrl){
             $state.go($stateParams.redirectUrl);
