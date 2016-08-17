@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/6/27.
  */
 angular.module('loginControllers',[])
-  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaLocalNotification','$cordovaToast','$cordovaKeyboard','$cordovaSQLite',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaLocalNotification,$cordovaToast,$cordovaKeyboard,$cordovaSQLite){
+  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaToast','$cordovaSQLite',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaToast,$cordovaSQLite){
     $ionicModal.fromTemplateUrl('templates/reg.html', {
       scope: $scope,
       animation: 'slide-in-up'
@@ -80,7 +80,7 @@ angular.module('loginControllers',[])
             _id:data.user._id
           });
           //登陆成功，调用推送服务
-          window.pushservice.startService({_id:data.user._id,name:data.user.name});
+          window.pushservice.startService({name:data.user.name,_id:data.user._id,image:data.user.image,token:data.user.token});
           //登录成功之后，跳转
           if($stateParams.redirectUrl){
             $state.go($stateParams.redirectUrl);
