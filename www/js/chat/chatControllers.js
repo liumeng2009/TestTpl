@@ -184,6 +184,8 @@ angular.module('chatControllers',[])
       if($stateParams.from&&$stateParams.to) {
         if (token) {
           iosocket.emit('private message', $stateParams.from._id, $stateParams.to._id, $scope.sendMessage);
+          iosocket.emit('send','haha');
+          iosocket.emit('send_all','hehe');
           var _m = {
             type: 'from',
             image: $scope.fromuser.image,

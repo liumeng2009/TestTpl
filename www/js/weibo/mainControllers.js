@@ -2,10 +2,10 @@
  * Created by Administrator on 2016/7/22.
  */
 angular.module('mainControllers',['ngCordova'])
-  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast){
+  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools){
     $scope.$on('$ionicView.afterEnter',function(){
       //app默认进入页面
-      var token=$window.localStorage.accesstoken;
+      var token=$SFTools.getToken();
       if(token){
         $usercenterData.usercenter({token:token})
           .success(function(data){
@@ -19,13 +19,48 @@ angular.module('mainControllers',['ngCordova'])
               //登录成功之后，登录实时系统
               iosocket.emit('login', {
                 name:data.user.name,
-                _id:data.user._id
+                _id:data.user._id,
+                type:'page'
               });
               //iosocket.send('hi');
               //iosocket.on('connection',function(iosockett){
               //iosocket.on('userlist',function(obj){
               //  $rootScope.onlineUser=obj.userlist;
               //});
+
+              iosocket.on('message',function(obj){
+                var chat=obj.message;
+                var from=obj.from;
+                var db = null;
+                document.addEventListener('deviceready', function() {
+                  var exist=true;
+                  db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+                  db.executeSql('create table if not exists userinfo(id,name,image)');
+                  db.executeSql('select count(*) AS mycount from userinfo where id=?',[from._id],function(rs){
+                    var count=rs.rows.item(0).mycount;
+                    if(count>0){
+                      exist=true;
+                    }
+                    else{
+                      exist=false;
+                    }
+                  });
+
+                  console.log('发出消息的这个人的信息在数据库里面存在吗？'+exist);
+
+                  db.transaction(function(tx) {
+                    tx.executeSql('CREATE TABLE IF NOT EXISTS chat (id,from,to,content,createAt,saw)');
+                    tx.executeSql('INSERT INTO chat VALUES (?,?,?,?,?,?)', [chat._id,chat.from,chat.to,chat.content,chat.createAt,0]);
+                    if(exist){
+                      tx.executeSql('update userinfo set name=?,image=?',[from.name,from.image]);
+                    }
+                    else{
+                      tx.executeSql('insert into userinfo values(?,?,?)',[from._id,from.name,from.image]);
+                    }
+
+                  });
+                });
+              });
 
               iosocket.on('to'+data.user._id,function(obj){
                   var chats=$window.localStorage[data.user._id]?JSON.parse($window.localStorage[data.user._id]):[];
@@ -204,15 +239,7 @@ angular.module('mainControllers',['ngCordova'])
       }
     }
     $scope.showErrorMesPopup = function(title,cb) {
-      document.addEventListener('deviceready',function(){
-        $cordovaToast
-          .show(title, 'short', 'center')
-          .then(function(success) {
-
-          }, function (error) {
-
-          });
-      });
+      $SFTools.myToast(title);
     };
     $scope.check_online=function(){
       var token=$window.localStorage.accesstoken;

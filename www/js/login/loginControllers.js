@@ -60,24 +60,11 @@ angular.module('loginControllers',[])
         }else{
           //成功，把token存入localStorage
           $window.localStorage.accesstoken=data.user.token;
-          //测试本地通知
-          //$scope.scheduleSingleNotification();
-          //sql存储登录信息
-          /*
-          var db=$cordovaSQLite.openDB({ name: "sf.db" });
-
-          db.sqlBatch([
-            'CREATE TABLE IF NOT EXISTS tb_login (name,token,image)',
-            [ 'INSERT INTO DemoTable VALUES (?,?)', ['Alice', 101] ]
-          ], function() {
-            //console.log('Populated database OK');
-          }, function(error) {
-            //console.log('SQL batch ERROR: ' + error.message);
-          });
-          */
+          
           iosocket.emit('login', {
             name:data.user.name,
-            _id:data.user._id
+            _id:data.user._id,
+            type:'page'
           });
           //登陆成功，调用推送服务
           window.pushservice.startService({name:data.user.name,_id:data.user._id,image:data.user.image,token:data.user.token});
