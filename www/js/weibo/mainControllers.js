@@ -22,11 +22,6 @@ angular.module('mainControllers',['ngCordova'])
                 _id:data.user._id,
                 type:'page'
               });
-              //iosocket.send('hi');
-              //iosocket.on('connection',function(iosockett){
-              //iosocket.on('userlist',function(obj){
-              //  $rootScope.onlineUser=obj.userlist;
-              //});
 
               iosocket.on('message',function(obj){
                 var chat=obj.message;
@@ -57,140 +52,9 @@ angular.module('mainControllers',['ngCordova'])
                     else{
                       tx.executeSql('insert into userinfo values(?,?,?)',[from._id,from.name,from.image]);
                     }
-
                   });
                 });
               });
-
-              iosocket.on('to'+data.user._id,function(obj){
-                  var chats=$window.localStorage[data.user._id]?JSON.parse($window.localStorage[data.user._id]):[];
-                  if(chats.length===0){
-                    var chat={
-                      id:obj.from._id,
-                      name:obj.from.name,
-                      image:obj.from.image,
-                      content:[obj.message],
-                      createAt:obj.createAt,
-                      new:true
-                    };
-                    chats.unshift(chat);
-                    $window.localStorage[data.user._id]=JSON.stringify(chats);
-                  }
-                  else{
-                    for(var i=0;i<chats.length;i++){
-                      if(chats[i].id.toString()===obj.from._id.toString()){
-                        if(chats[i].new){
-                          chats[i].content.unshift(obj.message);
-                          chats[i].createAt=obj.createAt;
-                          chats[i].new=true;
-                          //置前
-                          var c=chats[i];
-                          chats.splice(i,1);
-                          chats.unshift(c);
-                          break;
-                        }
-                        else{
-                          chats[i].content=[obj.message];
-                          chats[i].createAt=obj.createAt;
-                          chats[i].new=true;
-                          //置前
-                          var c=chats[i];
-                          chats.splice(i,1);
-                          chats.unshift(c);
-                          break;
-                        }
-
-                      }
-                      else{
-                        if(i===chats.length-1){
-                          //说明没有
-                          var chat={
-                            id:obj.from._id,
-                            name:obj.from.name,
-                            image:obj.from.image,
-                            content:[obj.message],
-                            createAt:obj.createAt,
-                            new:true
-                          };
-                          chats.unshift(chat);
-                          //i++;
-                          break;
-                        }
-                      }
-                    }
-                  }
-
-                  $window.localStorage[data.user._id]=JSON.stringify(chats);
-                  $scope.chats=chats;
-
-                  $scope.check_online();
-
-
-                  $scope.$apply();
-                })
-             // })
-
-              $mainData.not_read_list({token:token})
-                .success(function(da){
-                  if(da.success === 0){
-                    $scope.showErrorMesPopup(da.msg,goLogin);
-                  }else{
-                    var chatsDB=da.chats;
-                    //这是别人发给他的，但是没查看的
-                    if(chats.length==0){
-                      for(var i=0;i<chatsDB.length;i++){
-                        var chat={
-                          id:chatsDB[i].from._id,
-                          name:chatsDB[i].from.name,
-                          image:chatsDB[i].from.image,
-                          content:chatsDB[i].content,
-                          createAt:chatsDB[i].meta.createAt,
-                          new:true
-                        };
-                        chats.push(chat);
-                      }
-                    }
-                    else{
-                      for(var i=0;i<chats.length;i++){
-                        //遍历chatdb，如果没有这个id，就将chats里面id符合的条目new=false，
-                        if(chatsDB.length===0){
-                          chats[i].new=false;
-                        }
-                        for(var k=0;k<chatsDB.length;k++){
-                          if(chatsDB[k].from._id.toString()===chats[i].id){
-                            chats[i].content=chatsDB[k].content;
-                            chats[i].new=true;
-                            chatsDB.splice(k,1);
-                            break;
-                          }
-                          else{
-                            if(k===chatsDB.length-1){
-                              chats[i].new=false;
-                            }
-                          }
-                        }
-                      }
-                      //循环完毕后，还剩下多少chatdb
-                      for(var i=0;i<chatsDB.length;i++) {
-                        var chat = {
-                          id: chatsDB[i].from._id,
-                          name: chatsDB[i].from.name,
-                          image: chatsDB[i].from.image,
-                          content: chatsDB[i].content,
-                          createAt: chatsDB[i].meta.createAt,
-                          new: true
-                        };
-                        chats.push(chat);
-                      }
-                    }
-                    $scope.check_online();
-                    $scope.chats=chats;
-                    $window.localStorage[data.user._id]=JSON.stringify(chats);
-                  }
-                })
-                .error(function(){
-                  $scope.showErrorMesPopup('网络连接错误');
-                });
             }
           })
           .error(function(){
