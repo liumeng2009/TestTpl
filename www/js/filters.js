@@ -22,7 +22,7 @@ angular.module('starter.filters', [])
         out='昨天'+(dateInput.getHours())+':'+dateInput.getMinutes();
       }
       else{
-        out=dateInput.getFullYear()+'年'+(dateInput.getMonth()+1)+'月'+dateInput.getDate()+'日 '+(dateInput.getHours())+':'+dateInput.getMinutes();
+        out=(dateInput.getMonth()+1)+'月'+dateInput.getDate()+'日 '+(dateInput.getHours())+':'+dateInput.getMinutes();
       }
       return out;
     }
@@ -32,6 +32,18 @@ angular.module('starter.filters', [])
       var out='';
       if(parseInt(input)>99){
         out='99+'
+      }
+      else{
+        out=input;
+      }
+      return out;
+    }
+  })
+  .filter('mynew',function(){
+    return function(input){
+      var out='';
+      if(parseInt(input)>9){
+        out=null
       }
       else{
         out=input;

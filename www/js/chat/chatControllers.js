@@ -11,8 +11,6 @@ angular.module('chatControllers',[])
       $state.go('login');
     }
     $scope.messages=[];
-    $scope.fromuser={};
-    $scope.touser={};
     $scope.sendMessage='';
     $scope.scheduleSingleNotification = function () {
       $cordovaLocalNotification.schedule({
@@ -27,6 +25,16 @@ angular.module('chatControllers',[])
       });
     };
     $scope.$on('$ionicView.afterEnter',function(){
+      if($stateParams.userid){
+
+      }
+      else{
+        $state.go('tab.main');
+      }
+
+
+
+
       if($stateParams.to&&$stateParams.from){
         $scope.touser={
           name:$stateParams.to.name,

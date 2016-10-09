@@ -38,7 +38,8 @@
       "id": "com.telerik.plugins.nativepagetransitions"
     },
     "f:\\angularjs\\pushservice\\plugins",
-    "f:\\angularjs\\pushservice\\pushservice\\plugins"
+    "f:\\angularjs\\pushservice\\pushservice\\plugins",
+    "cordova-plugin-dialogs"
   ],
   "cordovaPlatforms": [
     "android"

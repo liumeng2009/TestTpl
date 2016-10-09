@@ -5,6 +5,7 @@
   <ion-content>
     <ion-list id="mainlist">
       <ion-item ng-repeat="chat in chats" ng-click="chatwidth('{{chat.id}}','{{chat.name}}')">
+        <!--
         <label ng-if="chat.online" class="">
           <img ng-src="chat.to.image" ng-if="chat.to.image">
           <img ng-src="../../img/avata_128.jpg" ng-if="!chat.to.image">
@@ -12,9 +13,12 @@
         <label ng-if="!chat.online" class="offline">
           <img ng-src="chat.to.image" ng-if="chat.to.image">
           <img ng-src="../../img/avata_128.jpg" ng-if="!chat.to.image">
+        </label>-->
+        <label>
+          <img ng-src="img/avata_128.jpg">
         </label>
-
-        <div class="new" ng-if="chat.new">{{chat.content.length| mynum}}</div>
+        <div class="new-small" ng-if="chat.new>9"></div>
+        <div class="new" ng-if="chat.new<10">{{chat.new | mynum}}</div>
         <div class="right">
           <div class="name">
             {{chat.name}}
@@ -22,7 +26,7 @@
               {{chat.createAt | mydate}}
             </div>
           </div>
-          <p class="content">{{chat.content[0]}}</p>
+          <p class="content">{{chat.content}}</p>
         </div>
       </ion-item>
     </ion-list>

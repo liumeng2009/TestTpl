@@ -20,12 +20,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       // org.apache.cordova.statusbar required
       StatusBar.styleDefault();
     }
-
-    iosocket = io.connect('http://liumeng.iego.cn/',{'reconnect':true,'force new connection': true});
-
-
-
   });
+  iosocket = io.connect('http://liumeng.iego.cn/',{'reconnect':true});
 })
 
 .config(function($stateProvider, $urlRouterProvider,$ionicConfigProvider,$sceDelegateProvider,$ionicNativeTransitionsProvider) {
@@ -166,11 +162,10 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       controller:'SchoolListCtrl'
     })
     .state('chat',{
-      url:'/chat',
+      url:'/chat/:userid',
       cache:false,
       templateUrl:'js/chat/chat.html',
-      controller:'ChatCtrl',
-      params:{'from':null,'to':null}
+      controller:'ChatCtrl'
     })
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/tab/main');
