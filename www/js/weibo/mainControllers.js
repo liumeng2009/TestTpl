@@ -9,7 +9,7 @@ angular.module('mainControllers',['ngCordova'])
       var username='';
       var _id='';
       $scope.chats=[];
-      alert('main加载');
+      //alert('main加载');
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
           var chatXiaoYuan={
@@ -28,6 +28,8 @@ angular.module('mainControllers',['ngCordova'])
           $scope.MessageSawListener();
           //接收“用户向这个人发信息了”这条消息
           $scope.SendingMessageListener();
+          //接收服务器收到了之后，发的通知
+          $scope.ServerReciverListener();
 
           $usercenterData.usercenter({token:_token.token})
             .success(function(data){
@@ -44,8 +46,9 @@ angular.module('mainControllers',['ngCordova'])
                 });
                 //服务器说，你发的消息我收到了
                 iosocket.on('reciveMessage',function(obj){
-                  alert('发送广播：服务器收到了。广播的名称为serverRecive'+obj.to);
+                  //alert('发送广播：服务器收到了。广播的名称为serverRecive'+obj.to);
                   $rootScope.$broadcast('ServerRecive'+obj.to,obj);
+                  $rootScope.$broadcast('ServerRecive',obj);
                   //更新main列表
                   for(var i=0;i<$scope.chats.length;i++){
                     if($scope.chats[i].userid===obj.to){
@@ -69,7 +72,6 @@ angular.module('mainControllers',['ngCordova'])
         else{
           //$SFTools.myToast('getToken这个service提供的token有问题')
           $timeout(function(){
-            alert('跳转');
             $state.go('login');
           },0);
         }
@@ -195,12 +197,12 @@ angular.module('mainControllers',['ngCordova'])
               else {
                 existChat = false;
               }
-              alert('是否存在这条信息'+existChat+chat.content);
+              //alert('是否存在这条信息'+existChat+chat.content);
               if (existChat) {
-                alert('不操作');
+                //alert('不操作');
               }
               else {
-                alert('插入');
+                //alert('插入');
                 db.executeSql('INSERT INTO chat VALUES (?,?,?,?,?,?)', [chat._id, chat.from, chat.to, chat.content, createtime.getTime(), 0]);
               }
             });
@@ -334,7 +336,7 @@ angular.module('mainControllers',['ngCordova'])
         ' and (fromuser=\''+touser+'\' or touser=\''+touser+'\')'+
         ' order by createAt desc';
 
-        var SqlMainMessage='select * from main_message where master=\''+touser+'\' group by master,relation_user_id order by createAt asc';
+        var SqlMainMessage='select * from main_message where master=\''+touser+'\' group by relation_user_id order by createAt';
 
         db.transaction(function(tx){
           tx.executeSql(SqlMainMessage,[],function(tx,rs){
@@ -352,7 +354,8 @@ angular.module('mainControllers',['ngCordova'])
                 userid:rs.rows.item(i).relation_user_id,
                 content:rs.rows.item(i).content,
                 createAt:rs.rows.item(i).createAt,
-                new:rs.rows.item(i).saw
+                new:rs.rows.item(i).saw,
+                type:rs.rows.item(i).status
               };
               $scope.chats.unshift(chat);
             }
@@ -392,6 +395,36 @@ angular.module('mainControllers',['ngCordova'])
         }
       });
       $scope.$apply();
+    }
+    //服务器说，你发的消息我收到了，这时候main列表的处理
+    $scope.ServerReciverListener=function(){
+      $rootScope.$on('ServerRecive',function(event,obj){
+        //alert('debug:服务器收到了，修改main列表');
+        //main页面要做的事情是：main列表对应信息的‘发送中’，去掉。数据库中，sending的这条信息删除，将content createAt替换到status=1那条信息上
+        for(var i=0;i<$scope.chats.length;i++){
+          if($scope.chats[i].userid===obj.to){
+            //alert('符合条件，进行修改');
+            $scope.chats[i].type='';
+            break;
+          }
+        }
+        $scope.$apply();
+        document.addEventListener('deviceready', function() {
+          var db=null;
+          db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+          db.transaction(function(tx){
+            var createAt=new Date(obj.message.meta.createAt);
+            tx.executeSql('update main_message set content=?,createAt=?,saw=0 where master=? and relation_user_id=? and status=1',[obj.message.content,createAt.getTime(),obj.from,obj.to]);
+            tx.executeSql('delete from main_message where master=? and relation_user_id=? and status=\'sending\' and createAt=?',[obj.from,obj.to,obj.timeid]);
+          },function(error){
+            //alert('main事务执行失败'+error);
+          },function(){
+            //alert('发送过程的消息确认完成');
+          });
+        });
+
+
+      });
     }
     $scope.initMessageFromServer=function(){
       console.log('来自服务器的消息');

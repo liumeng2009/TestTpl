@@ -26,7 +26,7 @@ angular.module('chatControllers',[])
     };
 
     $scope.$on('$ionicView.loaded',function(){
-      alert('chat页面进入了');
+      //alert('chat页面进入了');
       var registerKeyBoard='';
       //监听键盘弹出事件
       window.addEventListener('native.keyboardshow', keyboardShowHandler);
@@ -62,7 +62,9 @@ angular.module('chatControllers',[])
             _id:_token.userid,
             image:_token.image
           }
+          //从sql获取
           $scope.getMessageFromSql(_token,userid);
+          //和这个联系人的消息都是已看过了
           $scope.setSaw(_token.userid);
 
           //确认对方的身份信息
@@ -124,6 +126,7 @@ angular.module('chatControllers',[])
                     _m={
                       type:'from',
                       image:_token.image,
+                      userid:_token.userid,
                       username:_token.name,
                       mess:rs.rows.item(i).content,
                       createAt:rs.rows.item(i).createAt
@@ -134,6 +137,7 @@ angular.module('chatControllers',[])
                       type:'to',
                       image:touser.image,
                       username:touser.name,
+                      userid:touser._id,
                       mess:rs.rows.item(i).content,
                       createAt:rs.rows.item(i).createAt
                     }
@@ -154,6 +158,7 @@ angular.module('chatControllers',[])
                       type:'from',
                       image:_token.image,
                       username:_token.name,
+                      userid:_token.userid,
                       mess:rs.rows.item(i).content,
                       createAt:rs.rows.item(i).createAt
                     }
@@ -163,6 +168,7 @@ angular.module('chatControllers',[])
                       type:'to',
                       image:touser.image,
                       username:touser.name,
+                      userid:touser._id,
                       mess:rs.rows.item(i).content,
                       createAt:rs.rows.item(i).createAt
                     }
@@ -177,6 +183,7 @@ angular.module('chatControllers',[])
                     type:'from',
                     image:_token.image,
                     username:_token.name,
+                    userid:_token.userid,
                     mess:rs.rows.item(i).content,
                     createAt:rs.rows.item(i).createAt
                   }
@@ -186,6 +193,7 @@ angular.module('chatControllers',[])
                     type:'to',
                     image:touser.image,
                     username:touser.name,
+                    userid:touser._id,
                     mess:rs.rows.item(i).content,
                     createAt:rs.rows.item(i).createAt
                   }
@@ -246,10 +254,13 @@ angular.module('chatControllers',[])
           var timenow=new Date();
           var _m={
             type:'from',
+            userid:_token.userid,
             image:_token.image,
             username:_token.name,
             mess:$scope.sendMessage,
-            createAt:timenow.getTime()
+            createAt:timenow.getTime(),
+            timeid:timeid,
+            send:'sending'
           }
           if($scope.messages.length>0){
             var lastCreateAt=$scope.messages[$scope.messages.length-1].createAt;
@@ -372,7 +383,7 @@ angular.module('chatControllers',[])
 
       })
       $rootScope.$on('ServerRecive'+$stateParams.userid,function(event,obj){
-        alert('接到了angularjs的广播，广播名称是'+'ServerRecive'+$stateParams.userid+'服务器说，我收到了，你做自己的处理吧'+obj.timeid+obj.from+obj.to+obj.message.content+'事件名称是');
+        // alert('接到了angularjs的广播，广播名称是'+'ServerRecive'+$stateParams.userid+'服务器说，我收到了，你做自己的处理吧'+obj.timeid+obj.from+obj.to+obj.message.content+'事件名称是');
         //服务器收到了，把nosend表的status置0，然后将信息存入chat表
         document.addEventListener('deviceready', function() {
           var db = null;
@@ -382,9 +393,22 @@ angular.module('chatControllers',[])
             var createtime=new Date(obj.message.meta.createAt);
             tx.executeSql('insert into chat values(?,?,?,?,?,?)',[obj.message._id,obj.from,obj.to,obj.message.content,createtime.getTime(),1]);
           },function(tx,error){
-
+            //alert('事务执行失败'+error);
           },function(){
-            alert('数据库操作成功');
+            //alert('数据库操作成功');
+            //服务器说：你发的我收到了。chat页面找到这条信息，然后把这条信息的send:sending属性去掉
+            for(var i=0;i<$scope.messages.length;i++){
+              for(var j=0;j<$scope.messages[i].chatlist.length;j++){
+                //alert($scope.messages[i].chatlist[j].mess+'     '+$scope.messages[i].chatlist[j].timeid+'     '+obj.timeid+'       '+obj.message.content);
+                if($scope.messages[i].chatlist[j].type==='from'&&$scope.messages[i].chatlist[j].userid===obj.from&&$scope.messages[i].chatlist[j].timeid===obj.timeid){
+                  //说明这条信息是发送成功的那一条
+                  //alert('chat页面符合条件，修改');
+                  $scope.messages[i].chatlist[j].send='';
+                  break;
+                }
+              }
+            }
+            $scope.$apply();
           });
         });
       });

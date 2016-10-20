@@ -10,7 +10,6 @@ angular.module('loginControllers',[])
       $scope.modal_reg = modal;
     });
     $scope.$on('$ionicView.enter',function(){
-      alert('清除缓存');
       $ionicHistory.clearHistory();
       $ionicHistory.clearCache();
     });
