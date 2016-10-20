@@ -7,7 +7,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','starter.filters','starter.directives','ionic-native-transitions'])
 
-.run(function($ionicPlatform) {
+.run(function($ionicPlatform,$SFTools) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -21,7 +21,27 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       StatusBar.styleDefault();
     }
   });
-  iosocket = io.connect('http://liumeng.iego.cn/',{'reconnect':true});
+  TIME_SPACING=5;
+  iosocket='';
+  token='';
+  $SFTools.getToken(function(_token){
+    if(_token&&_token.userid&&_token!='') {
+      iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
+      iosocket.on('connect', function () {
+        console.log('连接了，不知道是重新连还是直接连，username是' + _token.name + ',_id是' + _token.userid);
+        if (_token.name != '' && _token.userid != '') {
+          iosocket.emit('login', {
+            name: _token.name,
+            _id: _token.userid,
+            type: 'page'
+          });
+        }
+      });
+    }
+    else{
+
+    }
+  });
 })
 
 .config(function($stateProvider, $urlRouterProvider,$ionicConfigProvider,$sceDelegateProvider,$ionicNativeTransitionsProvider) {
@@ -120,7 +140,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
     .state('tab', {
     url: '/tab',
     abstract: true,
-    templateUrl: 'js/usercenter/tabs.html'
+    templateUrl: 'js/usercenter/tabs.html',
+    controller:'TabCtrl'
   })
 
   // Each tab has its own nav history stack:
@@ -162,8 +183,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       controller:'SchoolListCtrl'
     })
     .state('chat',{
-      url:'/chat/:userid',
-      cache:false,
+      url:'/chat/:userid/:username',
       templateUrl:'js/chat/chat.html',
       controller:'ChatCtrl'
     })
