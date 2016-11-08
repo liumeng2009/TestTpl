@@ -21,7 +21,6 @@ angular.module('mainControllers',['ngCordova'])
             new:0
           };
           $scope.chats.push(chatXiaoYuan);
-          $scope.$apply();
           //从sql找到列表数据
           $scope.initMessageFromSql(_token.userid);
           //接收“用户看过了”这条消息
@@ -42,6 +41,7 @@ angular.module('mainControllers',['ngCordova'])
                 $scope.initMessageFromServer();
                 //获取socket信息，发送angularjs通知
                 iosocket.on('message',function(obj){
+                  alert('收到消息了');
                   $rootScope.$broadcast('ReciveMessage',obj);
                 });
                 //服务器说，你发的消息我收到了
@@ -394,7 +394,6 @@ angular.module('mainControllers',['ngCordova'])
           }
         }
       });
-      $scope.$apply();
     }
     //服务器说，你发的消息我收到了，这时候main列表的处理
     $scope.ServerReciverListener=function(){

@@ -9,13 +9,13 @@ angular.module('starter.filters', [])
       var nowDate=new Date();
       if(dateInput.getDay()===nowDate.getDay()){
         if(dateInput.getHours()>12){
-          out='下午'+(dateInput.getHours()-12)+':'+(dateInput.getMinutes()<10?('0'+dateInput.getMinutes()):dateInput.getMinutes());
+          out=''+(dateInput.getHours())+':'+(dateInput.getMinutes()<10?('0'+dateInput.getMinutes()):dateInput.getMinutes());
         }
         else if(dateInput.getHours()<12){
-          out='早上'+(dateInput.getHours())+':'+(dateInput.getMinutes()<10?('0'+dateInput.getMinutes()):dateInput.getMinutes());
+          out=''+(dateInput.getHours())+':'+(dateInput.getMinutes()<10?('0'+dateInput.getMinutes()):dateInput.getMinutes());
         }
         else{
-          out='中午'+(dateInput.getHours())+':'+(dateInput.getMinutes()<10?('0'+dateInput.getMinutes()):dateInput.getMinutes());
+          out=''+(dateInput.getHours())+':'+(dateInput.getMinutes()<10?('0'+dateInput.getMinutes()):dateInput.getMinutes());
         }
       }
       else if(nowDate.getDay()-dateInput.getDay()===1){

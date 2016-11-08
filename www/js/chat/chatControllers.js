@@ -24,6 +24,11 @@ angular.module('chatControllers',[])
         // ...
       });
     };
+    $scope.$on('$ionicView.enter',function(){
+      $SFTools.getToken(function(_token){
+        $scope.setSaw(_token.userid);
+      });
+    });
 
     $scope.$on('$ionicView.loaded',function(){
       //alert('chat页面进入了');
@@ -64,8 +69,7 @@ angular.module('chatControllers',[])
           }
           //从sql获取
           $scope.getMessageFromSql(_token,userid);
-          //和这个联系人的消息都是已看过了
-          $scope.setSaw(_token.userid);
+
 
           //确认对方的身份信息
           $usercenterData.user_by_id({token:_token.token,id:userid})
@@ -105,14 +109,23 @@ angular.module('chatControllers',[])
         //从sql读取今天并且没有查看过的所有信息
         var db = null;
         db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+        db.executeSql("create table if not exists nosend(id,fromuser,touser,content,status)");
         var now=new Date();
         var DateSwap=new Date();
         DateSwap.setHours(0);
         DateSwap.setMinutes(0);
         DateSwap.setSeconds(0);
         var resultThreeDaysAgo=new Date(DateSwap.getTime()-2*24*3600*1000);
-        var sqlStr='select * from chat where createAt>='+resultThreeDaysAgo.getTime()+' and (fromuser=\''+_token.userid+'\' and touser=\''+touser+'\' or touser=\''+_token.userid+'\' and fromuser=\''+touser+'\') order by createAt asc';
+        var sqlStr='select fromuser,touser,content,createAt,id as status from chat'+
+          ' where createAt>='+resultThreeDaysAgo.getTime()+' and'+
+          ' (fromuser=\''+_token.userid+'\' and touser=\''+touser+'\''
+          +' or touser=\''+_token.userid+'\' and fromuser=\''+touser+'\')'
+          +' union'
+          +' select fromuser,touser,content,id as createAt,status from nosend where status=1 and '
+          +' touser=\''+touser+'\' and fromuser=\''+_token.userid+'\''
+          +' order by createAt asc';
         db.transaction(function(tx){
+
           tx.executeSql(sqlStr,[],function(tx,rs){
             for(var i=0;i<rs.rows.length;i++){
               //按照时间段进行分组
@@ -129,7 +142,8 @@ angular.module('chatControllers',[])
                       userid:_token.userid,
                       username:_token.name,
                       mess:rs.rows.item(i).content,
-                      createAt:rs.rows.item(i).createAt
+                      createAt:rs.rows.item(i).createAt,
+                      send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
                     }
                   }
                   else{
@@ -139,7 +153,8 @@ angular.module('chatControllers',[])
                       username:touser.name,
                       userid:touser._id,
                       mess:rs.rows.item(i).content,
-                      createAt:rs.rows.item(i).createAt
+                      createAt:rs.rows.item(i).createAt,
+                      send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
                     }
                   }
                   var chatlist=[];
@@ -160,7 +175,8 @@ angular.module('chatControllers',[])
                       username:_token.name,
                       userid:_token.userid,
                       mess:rs.rows.item(i).content,
-                      createAt:rs.rows.item(i).createAt
+                      createAt:rs.rows.item(i).createAt,
+                      send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
                     }
                   }
                   else{
@@ -170,7 +186,8 @@ angular.module('chatControllers',[])
                       username:touser.name,
                       userid:touser._id,
                       mess:rs.rows.item(i).content,
-                      createAt:rs.rows.item(i).createAt
+                      createAt:rs.rows.item(i).createAt,
+                      send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
                     }
                   }
                   $scope.messages[$scope.messages.length-1].chatlist.push(_m);
@@ -185,7 +202,8 @@ angular.module('chatControllers',[])
                     username:_token.name,
                     userid:_token.userid,
                     mess:rs.rows.item(i).content,
-                    createAt:rs.rows.item(i).createAt
+                    createAt:rs.rows.item(i).createAt,
+                    send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
                   }
                 }
                 else{
@@ -195,7 +213,8 @@ angular.module('chatControllers',[])
                     username:touser.name,
                     userid:touser._id,
                     mess:rs.rows.item(i).content,
-                    createAt:rs.rows.item(i).createAt
+                    createAt:rs.rows.item(i).createAt,
+                    send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
                   }
                 }
                 var chatlist=[_m];
@@ -222,10 +241,15 @@ angular.module('chatControllers',[])
           var timeid=time.getTime();
           var sendContent=$scope.sendMessage;
           iosocket.emit('private message', _token.userid, $stateParams.userid, sendContent,timeid);
+          //加入发送超时模块,一分钟没收到反馈，就再次发送，一直循环，持续5次。如果网络恢复，也尝试发送
+          var sendingObj=
+          //超过五次，标识为发送不成功，再次发送需要用户确认
+
+
           //将信息存入未发表成功的信息表
           document.addEventListener('deviceready', function() {
             var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
-            // status=1 默认 status=0的时候，说明这条数据发送成功了
+            // status=1 默认 status=0的时候，说明这条数据发送成功了 id列就是时间
             db.executeSql('create table if not exists nosend(id,fromuser,touser,content,status)');
             db.transaction(function(tx){
               tx.executeSql('insert into nosend values(?,?,?,?,?)',[timeid,_token.userid,$stateParams.userid,sendContent,1]);
