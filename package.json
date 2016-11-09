@@ -39,7 +39,8 @@
     },
     "f:\\angularjs\\pushservice\\plugins",
     "f:\\angularjs\\pushservice\\pushservice\\plugins",
-    "cordova-plugin-dialogs"
+    "cordova-plugin-dialogs",
+    "cordova-plugin-app-preferences"
   ],
   "cordovaPlatforms": [
     "android"
