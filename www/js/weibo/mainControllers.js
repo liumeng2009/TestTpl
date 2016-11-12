@@ -85,7 +85,7 @@ angular.module('mainControllers',['ngCordova'])
     //弹出modal
     $ionicModal.fromTemplateUrl('templates/modal_add.html', {
       scope: $scope,
-      animation: 'slide-in-up'
+      animation: 'slide-in-left'
     }).then(function(modal) {
       $scope.modal = modal;
     });
@@ -865,7 +865,6 @@ angular.module('mainControllers',['ngCordova'])
           tx.executeSql('update main_message set saw=0 where master=? and relation_user_id=?',[userid,touser]);
         },function(error){
         },function(){
-          alert('发送我看过了这个通知');
           $rootScope.$broadcast('SawMessage',touser);
         })
       });
