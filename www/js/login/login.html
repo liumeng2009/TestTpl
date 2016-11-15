@@ -17,8 +17,8 @@
           <i class="ion-close-round padding red" ng-show="loginForm.password.$dirty && loginForm.password.$invalid"></i>
           <i class="ion-checkmark-round padding green" ng-show="loginForm.password.$dirty && loginForm.password.$valid"></i>
         </label>
-        <button class="button button-full button-balanced" ng-disabled="loginForm.$invalid" ng-click="doLogin()">
-          登录
+        <button class="button button-full button-balanced" ng-disabled="loginForm.$invalid||loginPage.noClick" ng-click="doLogin()">
+          {{loginPage.action}}
         </button>
         <div class="row padding">
           <div class="col col-30" style="text-align: left">

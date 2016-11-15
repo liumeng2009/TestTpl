@@ -2,8 +2,11 @@
  * Created by Administrator on 2016/7/22.
  */
 angular.module('mainControllers',['ngCordova'])
-  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory){
+  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar){
     $scope.$on('$ionicView.loaded',function(){
+
+
+
       //app默认进入页面
       var db = null;
       var username='';
@@ -32,6 +35,7 @@ angular.module('mainControllers',['ngCordova'])
 
           $usercenterData.usercenter({token:_token.token})
             .success(function(data){
+              alert(data.success+data);
               if(data.success===0){
                 $state.go('login');
                 $scope.showErrorMesPopup(data.msg);
@@ -79,6 +83,9 @@ angular.module('mainControllers',['ngCordova'])
     });
 
     $scope.$on('$ionicView.afterEnter',function(){
+      document.addEventListener("deviceready",function(){
+        $cordovaStatusbar.backgroundColorByHexString('#333333');
+      },false);
 
     });
 

@@ -3,6 +3,10 @@
  */
 angular.module('loginControllers',[])
   .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaToast','$cordovaSQLite',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaToast,$cordovaSQLite){
+    $scope.loginPage={
+      action:'登录',
+      noClick:false
+    };
     $ionicModal.fromTemplateUrl('templates/reg.html', {
       scope: $scope,
       animation: 'slide-in-up'
@@ -54,11 +58,15 @@ angular.module('loginControllers',[])
       });
     };
     $scope.doLogin=function(){
-      $ionicLoading.show({
-        delay:200
-      });
+      $scope.loginPage={
+        action:'登录中...',
+        noClick:true
+      };
       $loginData.login(this.user).success(function(data){
-        $ionicLoading.hide();
+        $scope.loginPage={
+          action:'登录',
+          noClick:false
+        };
         if (data.success !== 0) {
           //成功，把token存入Sql
           document.addEventListener('deviceready', function () {
@@ -68,7 +76,6 @@ angular.module('loginControllers',[])
             db.executeSql('create table if not exists users(id,name,active,image,token,createAt)');
             db.executeSql('select count(*) AS mycount from users where id=?', [data.user._id], function (rs) {
               var count = rs.rows.item(0).mycount;
-              console.log('222222222222' + count);
               if (count > 0) {
                 exist = true;
               }
@@ -79,14 +86,18 @@ angular.module('loginControllers',[])
               if (exist) {
                 db.transaction(function (tx) {
                   tx.executeSql('update users set active=0');
-                  tx.executeSql('update users set name=?,token=?,image=?,active=1 where id=?', [data.user.name, data.user.token, data.user.image, data, user._id]);
+                  tx.executeSql('update users set name=?,token=?,image=?,active=1 where id=?', [data.user.name, data.user.token, data.user.image, data, user._id],function(){
+                    token=data.user.token;
+                  });
                 });
               }
               else {
                 db.transaction(function (tx) {
                   tx.executeSql('update users set active=0');
                   var ts = new Date();
-                  tx.executeSql('insert into users values(?,?,?,?,?,?)', [data.user._id, data.user.name, 1, data.user.image, data.user.token, ts.getTime()]);
+                  tx.executeSql('insert into users values(?,?,?,?,?,?)', [data.user._id, data.user.name, 1, data.user.image, data.user.token, ts.getTime()],function(){
+                    token=data.user.token;
+                  });
                 });
               }
             });
@@ -112,8 +123,6 @@ angular.module('loginControllers',[])
             })
 
           });
-
-          //$window.localStorage.accesstoken=data.user.token;
           //如果没有自动登录，经过login页面的话，需要在这里连接socket
           iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
           iosocket.emit('login', {
@@ -140,7 +149,10 @@ angular.module('loginControllers',[])
           $scope.showErrorMesPopup(data.success + data.msg);
         }
       }).error(function(data,status,headers,config){
-        $ionicLoading.hide();
+        $scope.loginPage={
+          action:'登录',
+          noClick:false
+        };
         $scope.showErrorMesPopup('error'+data);
       });
     }
