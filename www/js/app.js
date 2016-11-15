@@ -7,7 +7,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','starter.filters','starter.directives','ionic-native-transitions'])
 
-.run(function($ionicPlatform,$SFTools) {
+.run(function($ionicPlatform,$SFTools,$state) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -39,7 +39,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       });
     }
     else{
-
+      alert('app内部的跳转');
+      $state.go('login');
     }
   });
 })

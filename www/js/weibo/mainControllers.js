@@ -6,14 +6,14 @@ angular.module('mainControllers',['ngCordova'])
     $scope.$on('$ionicView.loaded',function(){
 
 
-
       //app默认进入页面
       var db = null;
       var username='';
       var _id='';
       $scope.chats=[];
-      //alert('main加载');
+      alert('main加载');
       $SFTools.getToken(function(_token){
+        console.log('获取的token是：'+_token);
         if(_token&&_token.userid&&_token!=''){
           var chatXiaoYuan={
             id:0,
@@ -80,11 +80,15 @@ angular.module('mainControllers',['ngCordova'])
           },0);
         }
       });
+      alert('loaded函数完成');
     });
 
     $scope.$on('$ionicView.afterEnter',function(){
       document.addEventListener("deviceready",function(){
-        $cordovaStatusbar.backgroundColorByHexString('#333333');
+        $cordovaStatusbar.overlaysWebView(true);
+        $cordovaStatusbar.styleDefault();
+        $cordovaStatusbar.backgroundColorByHexString('#333');
+        $cordovaStatusbar.hide();
       },false);
 
     });
