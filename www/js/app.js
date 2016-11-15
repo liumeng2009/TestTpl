@@ -17,8 +17,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
 
     }
     if (window.StatusBar) {
-      // org.apache.cordova.statusbar required
-      StatusBar.styleDefault();
+      alert('success');
+      StatusBar.backgroundColorByHexString("#608628");
     }
   });
   TIME_SPACING=5;
@@ -40,7 +40,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
     }
     else{
       alert('app内部的跳转');
-      $state.go('login');
+      //$state.go('login');
     }
   });
 })

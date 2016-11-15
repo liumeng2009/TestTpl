@@ -4,6 +4,7 @@
 angular.module('mainControllers',['ngCordova'])
   .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar){
     $scope.$on('$ionicView.loaded',function(){
+      alert('main页面加载');
 
 
       //app默认进入页面
@@ -11,7 +12,6 @@ angular.module('mainControllers',['ngCordova'])
       var username='';
       var _id='';
       $scope.chats=[];
-      alert('main加载');
       $SFTools.getToken(function(_token){
         console.log('获取的token是：'+_token);
         if(_token&&_token.userid&&_token!=''){
@@ -80,16 +80,17 @@ angular.module('mainControllers',['ngCordova'])
           },0);
         }
       });
-      alert('loaded函数完成');
     });
 
     $scope.$on('$ionicView.afterEnter',function(){
-      document.addEventListener("deviceready",function(){
-        $cordovaStatusbar.overlaysWebView(true);
-        $cordovaStatusbar.styleDefault();
-        $cordovaStatusbar.backgroundColorByHexString('#333');
+      alert('main页面加载3');
+
+        alert('main页面加载2');
+        //$cordovaStatusbar.overlaysWebView(true);
+        //$cordovaStatusbar.styleDefault();
+        //$cordovaStatusbar.backgroundColorByHexString('#333');
         $cordovaStatusbar.hide();
-      },false);
+        alert('状态栏的可视性为：'+$cordovaStatusbar.isVisible());
 
     });
 

@@ -20,13 +20,13 @@ angular.module('starter.services', ['loginServices','usercenterServices','school
         });
       },
       getToken:function(callback){
-        alert('现在的token是'+token);
-        if(token){
+        if(token&&token!=''){
           console.log('来自全局变量');
           callback(token);
         }
         else{
           document.addEventListener('deviceready',function() {
+            alert('尝试打开数据库');
             var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
               db.executeSql('SELECT * FROM users where active=1', [], function (rs) {
                 if(rs.rows.length>0){
