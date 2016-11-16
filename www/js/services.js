@@ -26,7 +26,6 @@ angular.module('starter.services', ['loginServices','usercenterServices','school
         }
         else{
           document.addEventListener('deviceready',function() {
-            alert('尝试打开数据库');
             var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
               db.executeSql('SELECT * FROM users where active=1', [], function (rs) {
                 if(rs.rows.length>0){

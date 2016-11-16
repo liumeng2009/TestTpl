@@ -9,7 +9,7 @@ angular.module('loginControllers',[])
     };
     $ionicModal.fromTemplateUrl('templates/reg.html', {
       scope: $scope,
-      animation: 'slide-in-up'
+      animation: 'slide-in-left'
     }).then(function(modal) {
       $scope.modal_reg = modal;
     });

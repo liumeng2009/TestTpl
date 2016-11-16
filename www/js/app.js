@@ -17,8 +17,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
 
     }
     if (window.StatusBar) {
-      alert('success');
-      StatusBar.backgroundColorByHexString("#608628");
+      StatusBar.backgroundColorByHexString("#444");
     }
   });
   TIME_SPACING=5;
@@ -28,7 +27,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
     if(_token&&_token.userid&&_token!='') {
       iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
       iosocket.on('connect', function () {
-        console.log('连接了，不知道是重新连还是直接连，username是' + _token.name + ',_id是' + _token.userid);
+        //console.log('连接了，不知道是重新连还是直接连，username是' + _token.name + ',_id是' + _token.userid);
         if (_token.name != '' && _token.userid != '') {
           iosocket.emit('login', {
             name: _token.name,
@@ -39,8 +38,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       });
     }
     else{
-      alert('app内部的跳转');
-      //$state.go('login');
+      $SFTools.myToast('身份过期，请您重新登陆');
+      $state.go('login');
     }
   });
 })
@@ -129,7 +128,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       params:{redirectUrl:null},
       nativeTransitions: {
         "type": "slide",
-        "direction": "up",
+        "direction": "left",
         "duration":400
       }
     })

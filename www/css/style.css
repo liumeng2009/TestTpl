@@ -33,8 +33,16 @@
 }
 .slide-in-left.ng-leave,
 .slide-in-left > .ng-leave {
-  -webkit-transition: all ease-in-out 200ms;
-  transition: all ease-in-out 200ms;
+  -webkit-transition: all ease-in-out 250ms;
+  transition: all ease-in-out 250ms;
+}
+.tab-badge-red {
+  background-color: red !important;
+  color: #fff !important;
+}
+.login-ico {
+  position: absolute;
+  right: 0px;
 }
 .avatar-bg {
   height: 175px;

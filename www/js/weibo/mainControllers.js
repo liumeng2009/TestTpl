@@ -4,14 +4,12 @@
 angular.module('mainControllers',['ngCordova'])
   .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar){
     $scope.$on('$ionicView.loaded',function(){
-      alert('main页面加载');
-
-
       //app默认进入页面
       var db = null;
       var username='';
       var _id='';
       $scope.chats=[];
+      $rootScope.NewMessageCount=0;
       $SFTools.getToken(function(_token){
         console.log('获取的token是：'+_token);
         if(_token&&_token.userid&&_token!=''){
@@ -45,7 +43,6 @@ angular.module('mainControllers',['ngCordova'])
                 $scope.initMessageFromServer();
                 //获取socket信息，发送angularjs通知
                 iosocket.on('message',function(obj){
-                  alert('收到消息了');
                   $rootScope.$broadcast('ReciveMessage',obj);
                 });
                 //服务器说，你发的消息我收到了
@@ -83,14 +80,6 @@ angular.module('mainControllers',['ngCordova'])
     });
 
     $scope.$on('$ionicView.afterEnter',function(){
-      alert('main页面加载3');
-
-        alert('main页面加载2');
-        //$cordovaStatusbar.overlaysWebView(true);
-        //$cordovaStatusbar.styleDefault();
-        //$cordovaStatusbar.backgroundColorByHexString('#333');
-        $cordovaStatusbar.hide();
-        alert('状态栏的可视性为：'+$cordovaStatusbar.isVisible());
 
     });
 
@@ -144,7 +133,7 @@ angular.module('mainControllers',['ngCordova'])
           $usercenterData.user_by_id({token:_token.token,id:userid})
             .success(function(data){
               if(data.success===0){
-                $scope.showErrorMesPopup('网络连接错误11111'+data,goLogin);
+                $scope.showErrorMesPopup('网络连接错误'+data,goLogin);
               }
               else{
                 $scope.touser={
@@ -157,7 +146,7 @@ angular.module('mainControllers',['ngCordova'])
               }
             })
             .error(function(){
-              $scope.showErrorMesPopup('网络连接错误2222');
+              $scope.showErrorMesPopup('网络连接错误');
             });
         });
       }
@@ -242,20 +231,13 @@ angular.module('mainControllers',['ngCordova'])
         var from=obj.from;
         var db = null;
         //根据当前path决定new值，变了，根据modal是否存在而决定
-        var newMessage=false;
+        var newMessage=true;
 
-        //var path=$location.path();
-        //path格式是 /chat/id/name
-        //var pathArray=path.split('/');
-        //if(pathArray[1]&&pathArray[1]==='chat'&&pathArray[2]===from._id){
-          //说明当前路径在chat，并且和这个人说话，那么就不存在new的情况了。
-        //  newMessage=false;
-       // }
-        //else{
-        //  newMessage=true;
-       // }
 
-        if($scope.modal&&$scope.modal)
+        if($scope.modal&&$scope.modal.isShown()&&$scope.touser._id&&$scope.touser._id===from._id){
+          alert('正在和这个人对话，所以new为false');
+          newMessage=false;
+        }
 
         //向服务器发送消息，我收到了，你的标志位可以修改了
         iosocket.emit('ReciveMessage',{chatid:obj.message._id});
@@ -350,6 +332,8 @@ angular.module('mainControllers',['ngCordova'])
               if($scope.chats[i].new){
                 if(newMessage) {
                   $scope.chats[i].new = parseInt($scope.chats[i].new) + 1;
+                  alert('new值+1'+$rootScope.NewMessageCount);
+                  $rootScope.NewMessageCount=parseInt($rootScope.NewMessageCount)+1;
                 }
                 else{
                   $scope.chats[i].new=0;
@@ -358,6 +342,8 @@ angular.module('mainControllers',['ngCordova'])
               else{
                 if(newMessage){
                   $scope.chats[i].new=1;
+                  alert('new值+1'+$rootScope.NewMessageCount);
+                  $rootScope.NewMessageCount=parseInt($rootScope.NewMessageCount)+1;
                 }
                 else{
                   $scope.chats[i].new=0;
@@ -384,6 +370,8 @@ angular.module('mainControllers',['ngCordova'])
                   createAt:chat.meta.createAt,
                   new:newMessage?1:0
                 }
+                alert('new值+1'+$rootScope.NewMessageCount);
+                $rootScope.NewMessageCount=parseInt($rootScope.NewMessageCount)+1;
                 $scope.chats.unshift(newObj);
                 break;
               }
@@ -405,37 +393,11 @@ angular.module('mainControllers',['ngCordova'])
         DateToday.setFullYear(date.getFullYear(),date.getMonth(),date.getDay());
         var DateTodayTime=DateToday.getTime();
 
-        console.log('出问题的sql语句加的参数是：'+touser);
-
-        //一个sql语句无法完成，必须拼接对象了
-        var sqlContentStr='select userinfo.name as username,chat.createAt as createAt,chat.id as chatid,chat.content as content,userinfo.id as id,M.new as newmessage'+
-        ' from chat inner join userinfo on chat.fromuser=userinfo.id'+
-        ' inner join '+
-        ' (select count(content) as new,fromuser from chat where saw=0 and touser=\''+touser+'\'  group by fromuser) as M'+
-        ' on chat.fromuser=M.fromuser,'+
-        ' (select max(createAt) as createAt,fromuser from chat group by fromuser) as T'+
-        ' where chat.fromuser=T.fromuser'+
-        ' and chat.createAt=T.createAt'+
-        ' order by createAt';
-
-        var SqlAllStr='select chat.id,chat.content,chat.createAt,chat.saw,chat.fromuser,chat.touser,A.name as fromusername,B.name as tousername '+
-        ' from chat,userinfo as A,userinfo as B'+
-        ' where chat.fromuser=a.id'+
-        ' and chat.touser=B.id'+
-        ' and (fromuser=\''+touser+'\' or touser=\''+touser+'\')'+
-        ' order by createAt desc';
-
         var SqlMainMessage='select * from main_message where master=\''+touser+'\' group by relation_user_id order by createAt';
 
         db.transaction(function(tx){
           tx.executeSql(SqlMainMessage,[],function(tx,rs){
             for(var i=0;i<rs.rows.length;i++){
-              //console.log('有新的消息吗？'+rs.rows.item(i).content+rs.rows.item(i).fromname+rs.rows.item(i).saw+rs.rows.item(i).fromimage+rs.rows.item(i).createAt);
-              console.log('222222222222222222222'+rs.rows.item(i).newmessage);
-
-              for(var p in rs.rows.item(i)){
-                console.log('tttttttttttttttttttt'+p);
-              }
 
               var chat={
                 id:'',
@@ -447,6 +409,7 @@ angular.module('mainControllers',['ngCordova'])
                 type:rs.rows.item(i).status
               };
               $scope.chats.unshift(chat);
+              $rootScope.NewMessageCount=parseInt($rootScope.NewMessageCount)+parseInt(rs.rows.item(i).saw);
             }
           },function(tx,error){
             console.log('select error is'+error.message);
@@ -462,10 +425,10 @@ angular.module('mainControllers',['ngCordova'])
     //这个人的信息被看了，main列表的saw置0
     $scope.MessageSawListener=function(){
       $rootScope.$on('SawMessage',function(event,obj){
-        alert('接到了看过了通知'+obj);
         for(var i=0;i<$scope.chats.length;i++){
-          alert($scope.chats[i].userid+'和'+obj+'作比较');
           if($scope.chats[i].userid===obj){
+            var oldnew=$scope.chats[i].new;
+            $rootScope.NewMessageCount=parseInt($rootScope.NewMessageCount)-parseInt(oldnew);
             $scope.chats[i].new=0;
             break;
           }
