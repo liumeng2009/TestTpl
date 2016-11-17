@@ -3,7 +3,7 @@
     <ion-title class="title-left">晓园
       <span ng-if="NewMessageCount>0">({{NewMessageCount}})</span>
     </ion-title>
-    <button class="button">Edit</button>
+    <button class="button ion-android-add"></button>
   </ion-header-bar>
   <ion-content>
     <ion-list id="mainlist">
@@ -41,7 +41,7 @@
   <script id="templates/modal_add.html" type="text/ng-template">
     <ion-modal-view>
       <ion-header-bar align-title="center">
-        <button class="button button-icon icon ion-ios-arrow-left" ng-click="goMain()">
+        <button class="button button-icon icon ion-ios-arrow-left" ng-click="closeModal()">
 
         </button>
         <ion-title>

@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/7/22.
  */
 angular.module('mainControllers',['ngCordova'])
-  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar){
+  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform){
     $scope.$on('$ionicView.loaded',function(){
       //app默认进入页面
       var db = null;
@@ -11,7 +11,7 @@ angular.module('mainControllers',['ngCordova'])
       $scope.chats=[];
       $rootScope.NewMessageCount=0;
       $SFTools.getToken(function(_token){
-        console.log('获取的token是：'+_token);
+        console.log('获取的token是：'+_token+_token.userid);
         if(_token&&_token.userid&&_token!=''){
           var chatXiaoYuan={
             id:0,
@@ -90,7 +90,11 @@ angular.module('mainControllers',['ngCordova'])
     }).then(function(modal) {
       $scope.modal = modal;
     });
+    $scope.$on('modal.hidden',function(){
+      alert('modal被隐藏了,销毁他');
+    });
     $scope.openModal=function(userid,username){
+
       var registerKeyBoard='';
       $scope.messages=[];
       //监听键盘弹出事件
@@ -100,6 +104,7 @@ angular.module('mainControllers',['ngCordova'])
         //alert('Keyboard height is: ' + e.keyboardHeight);
         $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
 
+        //注册后退键
         registerKeyBoard=$ionicPlatform.registerBackButtonAction(function(){
           $cordovaKeyboard.close();
         }, 550, [0]);
@@ -151,7 +156,7 @@ angular.module('mainControllers',['ngCordova'])
         });
       }
       else{
-        $scope.modal.hide();
+        $scope.modal.remove();
       }
 
     }
@@ -615,8 +620,9 @@ angular.module('mainControllers',['ngCordova'])
           //alert(error);
         },
           function(){
-            //alert($scope.messages.length);
+            alert('信息条数是：'+$scope.messages.length);
             $scope.$apply();
+            alert('滚动到最下面');
             $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
           });
 
@@ -826,8 +832,8 @@ angular.module('mainControllers',['ngCordova'])
         });
       });
     }
-    $scope.goMain=function(){
-      $state.go('tab.main');
+    $scope.closeModal=function(){
+      $scope.modal.remove();
     }
     $scope.setSaw=function(userid,touser){
       //发送通知，告诉main页面，这些东西看过了。
