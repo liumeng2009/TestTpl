@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/7/22.
  */
 angular.module('mainControllers',['ngCordova'])
-  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform){
+  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform','$interval',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform,$interval){
     $scope.$on('$ionicView.loaded',function(){
       //app默认进入页面
       var db = null;
@@ -43,6 +43,7 @@ angular.module('mainControllers',['ngCordova'])
                 $scope.initMessageFromServer();
                 //获取socket信息，发送angularjs通知
                 iosocket.on('message',function(obj){
+                  console.log('我接收到了socket的消息');
                   $rootScope.$broadcast('ReciveMessage',obj);
                 });
                 //服务器说，你发的消息我收到了
@@ -91,7 +92,7 @@ angular.module('mainControllers',['ngCordova'])
       $scope.modal = modal;
     });
     $scope.$on('modal.hidden',function(){
-      alert('modal被隐藏了,销毁他');
+        $scope.chatBroadCastListener();
     });
     $scope.openModal=function(userid,username){
 
@@ -156,7 +157,7 @@ angular.module('mainControllers',['ngCordova'])
         });
       }
       else{
-        $scope.modal.remove();
+        $scope.modal.hide();
       }
 
     }
@@ -237,8 +238,6 @@ angular.module('mainControllers',['ngCordova'])
         var db = null;
         //根据当前path决定new值，变了，根据modal是否存在而决定
         var newMessage=true;
-
-
         if($scope.modal&&$scope.modal.isShown()&&$scope.touser._id&&$scope.touser._id===from._id){
           alert('正在和这个人对话，所以new为false');
           newMessage=false;
@@ -291,8 +290,8 @@ angular.module('mainControllers',['ngCordova'])
             }
 
             //最后更新首页表。数据不好查，只好建立新的表来保存，还可以提高首页性能
-            // status说明：1：正常 | failed：发送失败 | bak：草稿
-            db.executeSql('create table if not exists main_message(master,relation_user,relation_user_id,content,createAt,saw,status)');
+            // status说明：1：正常 | failed：发送失败 | bak：草稿 relation
+            db.executeSql('create table if not exists main_message(master,relation_user,relation_user_id,content,createAt,saw,status,relation_chat_id)');
             var master=chat.to;
             var relation_user=from.name;
             var relation_user_id=from._id;
@@ -302,16 +301,13 @@ angular.module('mainControllers',['ngCordova'])
               var createAtTime=new Date(chat.meta.createAt);
               if(countMain>0){
                 //存在
-                db.executeSql('update main_message set content=?,createAt=?,saw=? where master=? and relation_user_id=?',[chat.content,createAtTime.getTime(),newMessage?(parseInt(saw)+1):0,master,relation_user_id]);
+                db.executeSql('update main_message set content=?,createAt=?,saw=?,relation_chat_id=? where master=? and relation_user_id=?',[chat.content,createAtTime.getTime(),newMessage?(parseInt(saw)+1):0,chat._id,master,relation_user_id]);
               }
               else{
-                db.executeSql('insert into main_message values(?,?,?,?,?,?,?)',[master,relation_user,relation_user_id,chat.content,createAtTime.getTime(),newMessage?1:0,1]);
+                db.executeSql('insert into main_message values(?,?,?,?,?,?,?,?)',[master,relation_user,relation_user_id,chat.content,createAtTime.getTime(),newMessage?1:0,1,chat._id]);
               }
+              console.log('page修改了main_message的值');
             });
-
-
-
-
           },function(tx,error){
             alert(error.message);
           });
@@ -490,7 +486,7 @@ angular.module('mainControllers',['ngCordova'])
 
     //聊天modal的方法
     $scope.messages=[];
-    $scope.sendMessage='';
+    $scope.send={};
     $scope.keyBoardStatus=false;
     $scope.getMessageFromSql=function(_token,touser){
       //alert('取得最近三天的聊天记录'+_token.userid+_token.token);
@@ -620,9 +616,7 @@ angular.module('mainControllers',['ngCordova'])
           //alert(error);
         },
           function(){
-            alert('信息条数是：'+$scope.messages.length);
             $scope.$apply();
-            alert('滚动到最下面');
             $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
           });
 
@@ -633,20 +627,17 @@ angular.module('mainControllers',['ngCordova'])
         if(_token&&_token.userid&&_token!=''){
           var time=new Date();
           var timeid=time.getTime();
-          var sendContent=$scope.sendMessage;
-          iosocket.emit('private message', _token.userid, $stateParams.userid, sendContent,timeid);
+          var sendContent=$scope.send.sendMessage;
+          iosocket.emit('private message', _token.userid, $scope.touser._id, sendContent,timeid);
           //加入发送超时模块,一分钟没收到反馈，就再次发送，一直循环，持续5次。如果网络恢复，也尝试发送
-          var sendingObj=
-            //超过五次，标识为发送不成功，再次发送需要用户确认
-
-
+          //超过五次，标识为发送不成功，再次发送需要用户确认
             //将信息存入未发表成功的信息表
             document.addEventListener('deviceready', function() {
               var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
               // status=1 默认 status=0的时候，说明这条数据发送成功了 id列就是时间
               db.executeSql('create table if not exists nosend(id,fromuser,touser,content,status)');
               db.transaction(function(tx){
-                tx.executeSql('insert into nosend values(?,?,?,?,?)',[timeid,_token.userid,$stateParams.userid,sendContent,1]);
+                tx.executeSql('insert into nosend values(?,?,?,?,?)',[timeid,_token.userid,$scope.touser._id,sendContent,1]);
               },function(tx,error){
 
               },function(){
@@ -655,17 +646,17 @@ angular.module('mainControllers',['ngCordova'])
             });
 
           //发送广播，用户发送信息了
-          $rootScope.$broadcast('SendingMessage',{userid:$stateParams.userid,content:sendContent});
+          $rootScope.$broadcast('SendingMessage',{userid:$scope.touser._id,content:sendContent});
           document.addEventListener('deviceready', function() {
             var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
             //main-message列表存入一条status=sending的消息
             var master = _token.userid;
-            var relation_user = $stateParams.username;
-            var relation_user_id = $stateParams.userid;
+            var relation_user = $scope.touser.username;
+            var relation_user_id = $scope.touser._id;
             var main_content = sendContent;
             var main_saw = 0;
             var main_status = 'sending';
-            db.executeSql('insert into main_message values(?,?,?,?,?,?,?)', [master, relation_user, relation_user_id, main_content, timeid, main_saw, main_status]);
+            db.executeSql('insert into main_message values(?,?,?,?,?,?,?,?)', [master, relation_user, relation_user_id, main_content, timeid, main_saw, main_status,'']);
           });
 
           //实时显示
@@ -675,7 +666,7 @@ angular.module('mainControllers',['ngCordova'])
             userid:_token.userid,
             image:_token.image,
             username:_token.name,
-            mess:$scope.sendMessage,
+            mess:$scope.send.sendMessage,
             createAt:timenow.getTime(),
             timeid:timeid,
             send:'sending'
@@ -702,59 +693,15 @@ angular.module('mainControllers',['ngCordova'])
             }
             $scope.messages.push(messageper);
           }
-          $scope.sendMessage = '';
+          $scope.send.sendMessage = '';
           $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
           //$scope.$apply();
         }
       });
     };
-    $scope.saveChat=function(user,content,cdate){
-      //发送完毕后，将对象存入本地存储，体现在main页面
-      var chats = $window.localStorage[$stateParams.from._id]? JSON.parse($window.localStorage[$stateParams.from._id]):[];
-      if(chats.length===0) {
-        //说明没有和这个人说过，需要存入新的对象
-        var chat = {
-          id: user._id,
-          name: user.name,
-          image: user.image,
-          content: [content],
-          createAt: cdate,
-          new:false
-        }
-        chats.push(chat);
-        $window.localStorage[$stateParams.from._id] = JSON.stringify(chats);
-      }
-      else{
-        for (var i = 0; i < chats.length; i++) {
-          if (chats[i].id === user._id) {
-            chats[i].content = [content];
-            chats[i].createAt=cdate;
-            chats[i].new=false;
-            $window.localStorage[$stateParams.from._id]= JSON.stringify(chats);
-            break;
-          }
-          else if(i===chats.length-1){
-            var chat={
-              id:user._id,
-              name:user.name,
-              image:user.image,
-              content:content,
-              createAt:cdate,
-              new:false
-            }
-            chats.push(chat);
-            break;
-            //i++;
-            $window.localStorage[$stateParams.from._id]= JSON.stringify(chats);
-          }
-        }
-      }
-
-    }
     $scope.receiveMessagePerson=function(userid){
-      $rootScope.$on('ReciveMessage',function(event,obj){
+      $scope.chatBroadCastListener=$rootScope.$on('ReciveMessage',function(event,obj){
         //保存已经被main页面做了，所以实时显示即可
-        alert('chat页面收到消息了');
         if(userid===obj.from._id){
           if($scope.messages.length>0){
             _m={
@@ -833,7 +780,7 @@ angular.module('mainControllers',['ngCordova'])
       });
     }
     $scope.closeModal=function(){
-      $scope.modal.remove();
+      $scope.modal.hide();
     }
     $scope.setSaw=function(userid,touser){
       //发送通知，告诉main页面，这些东西看过了。
