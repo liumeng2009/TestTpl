@@ -20,34 +20,29 @@ angular.module('starter.services', ['loginServices','usercenterServices','school
         });
       },
       getToken:function(callback){
-        if(token&&token!=''){
-          console.log('来自全局变量');
-          callback(token);
-        }
-        else{
-          document.addEventListener('deviceready',function() {
-            var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
-              db.executeSql('SELECT * FROM users where active=1', [], function (rs) {
-                if(rs.rows.length>0){
-                  token={
-                    userid: rs.rows.item(0).id,
-                    name: rs.rows.item(0).name,
-                    token: rs.rows.item(0).token,
-                    createAt:rs.rows.item(0).createAt,
-                    image:rs.rows.item(0).image
-                  }
-                  callback(token);
+        document.addEventListener('deviceready',function() {
+          var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+            db.executeSql('SELECT * FROM users where active=1', [], function (rs) {
+              if(rs.rows.length>0){
+                alert('有token数据了');
+                token={
+                  userid: rs.rows.item(0).id,
+                  name: rs.rows.item(0).name,
+                  token: rs.rows.item(0).token,
+                  createAt:rs.rows.item(0).createAt,
+                  image:rs.rows.item(0).image
                 }
-                else{
-                  callback({});
-                }
-              },function(error){
-                console.log(error)
+                callback(token);
+              }
+              else{
+                alert('没有token数据');
                 callback({});
-              });
+              }
+            },function(error){
+              console.log(error)
+              callback({});
             });
-
-        }
+          });
       },
       getStartPage:function(callback){
           document.addEventListener('deviceready',function() {

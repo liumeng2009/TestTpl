@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/7/22.
  */
 angular.module('mainControllers',['ngCordova'])
-  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform','$interval',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform,$interval){
+  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform','$interval','$cordovaDevice',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform,$interval,$cordovaDevice){
     $scope.$on('$ionicView.loaded',function(){
       //app默认进入页面
       var db = null;
@@ -10,6 +10,26 @@ angular.module('mainControllers',['ngCordova'])
       var _id='';
       $scope.chats=[];
       $rootScope.NewMessageCount=0;
+
+      document.addEventListener('deviceready',function() {
+        var device = $cordovaDevice.getDevice();
+
+        var cordova = $cordovaDevice.getCordova();
+
+        var model = $cordovaDevice.getModel();
+
+        var platform = $cordovaDevice.getPlatform();
+
+        var uuid = $cordovaDevice.getUUID();
+
+        var version = $cordovaDevice.getVersion();
+
+
+
+      });
+
+
+
       $SFTools.getToken(function(_token){
         console.log('获取的token是：'+_token+_token.userid);
         if(_token&&_token.userid&&_token!=''){
@@ -30,10 +50,9 @@ angular.module('mainControllers',['ngCordova'])
           $scope.SendingMessageListener();
           //接收服务器收到了之后，发的通知
           $scope.ServerReciverListener();
-
+          console.log(_token.token);
           $usercenterData.usercenter({token:_token.token})
             .success(function(data){
-              alert(data.success+data);
               if(data.success===0){
                 $state.go('login');
                 $scope.showErrorMesPopup(data.msg);
@@ -72,10 +91,9 @@ angular.module('mainControllers',['ngCordova'])
             });
         }
         else{
-          //$SFTools.myToast('getToken这个service提供的token有问题')
-          $timeout(function(){
-            $state.go('login');
-          },0);
+          $SFTools.myToast('getToken这个service提供的token有问题')
+          $state.go('login');
+
         }
       });
     });
@@ -239,7 +257,6 @@ angular.module('mainControllers',['ngCordova'])
         //根据当前path决定new值，变了，根据modal是否存在而决定
         var newMessage=true;
         if($scope.modal&&$scope.modal.isShown()&&$scope.touser._id&&$scope.touser._id===from._id){
-          alert('正在和这个人对话，所以new为false');
           newMessage=false;
         }
 
@@ -333,7 +350,6 @@ angular.module('mainControllers',['ngCordova'])
               if($scope.chats[i].new){
                 if(newMessage) {
                   $scope.chats[i].new = parseInt($scope.chats[i].new) + 1;
-                  alert('new值+1'+$rootScope.NewMessageCount);
                   $rootScope.NewMessageCount=parseInt($rootScope.NewMessageCount)+1;
                 }
                 else{
@@ -343,7 +359,6 @@ angular.module('mainControllers',['ngCordova'])
               else{
                 if(newMessage){
                   $scope.chats[i].new=1;
-                  alert('new值+1'+$rootScope.NewMessageCount);
                   $rootScope.NewMessageCount=parseInt($rootScope.NewMessageCount)+1;
                 }
                 else{
@@ -371,7 +386,6 @@ angular.module('mainControllers',['ngCordova'])
                   createAt:chat.meta.createAt,
                   new:newMessage?1:0
                 }
-                alert('new值+1'+$rootScope.NewMessageCount);
                 $rootScope.NewMessageCount=parseInt($rootScope.NewMessageCount)+1;
                 $scope.chats.unshift(newObj);
                 break;

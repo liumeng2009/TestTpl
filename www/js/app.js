@@ -22,7 +22,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
   });
   TIME_SPACING=5;
   iosocket='';
-  token='';
   $SFTools.getToken(function(_token){
     if(_token&&_token.userid&&_token!='') {
       iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
@@ -38,7 +37,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       });
     }
     else{
-      $SFTools.myToast('身份过期，请您重新登陆');
+      $SFTools.myToast('请您先登陆');
       $state.go('login');
     }
   });

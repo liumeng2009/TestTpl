@@ -18,6 +18,13 @@ angular.module('loginServices',[])
           url:url,
           data:requestParams
         })
+      },
+      setDeviceId:function(requestParams){
+        var url=config.basePath+'setdeviceid?deviceType=phone&deviceId='+requestParams.deviceId+'&token='+requestParams.token;
+        return $http({
+          url:url,
+          method:'GET'
+        })
       }
     }
   });
