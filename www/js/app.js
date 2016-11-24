@@ -16,9 +16,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
       cordova.plugins.Keyboard.disableScroll(true);
 
     }
-    if (window.StatusBar) {
-      StatusBar.backgroundColorByHexString("#444");
-    }
   });
   TIME_SPACING=5;
   iosocket='';

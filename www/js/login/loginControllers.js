@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/6/27.
  */
 angular.module('loginControllers',[])
-  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaToast','$cordovaSQLite','$cordovaDevice',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaToast,$cordovaSQLite,$cordovaDevice){
+  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaToast','$cordovaSQLite','$cordovaDevice','$SFTools',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaToast,$cordovaSQLite,$cordovaDevice,$SFTools){
     $scope.loginPage={
       action:'登录',
       noClick:false
@@ -89,27 +89,27 @@ angular.module('loginControllers',[])
               if (exist) {
                 db.transaction(function (tx) {
                   tx.executeSql('update users set active=0');
-                  tx.executeSql('update users set name=?,token=?,image=?,active=1 where id=?', [data.user.name, data.user.token, data.user.image, data, user._id],function(){
+                  tx.executeSql('update users set name=?,token=?,image=?,active=1 where id=?', [data.user.name, data.user.token, data.user.image, data.user._id],function(){
 
                   });
                 },function(error){
                   console.log('有错误'+error);
                 },function(){
-                  $scope.loginNext();
+                  $scope.loginNext(data.user.name,data.user._id);
                 });
               }
               else {
                 db.transaction(function (tx) {
                   tx.executeSql('update users set active=0');
                   var ts = new Date();
-                  var deviceid=uuid+'+'+ts;
+                  var deviceid=uuid+' '+ts.getTime();
                   tx.executeSql('insert into users values(?,?,?,?,?,?,?)', [data.user._id, data.user.name, 1, data.user.image, data.user.token, ts.getTime(),deviceid],function(){
 
                   });
                 },function(error){
                   console.log('有错误'+error);
                 },function(){
-                  $scope.loginNext();
+                  $scope.loginNext(data.user.name,data.user._id);
                 });
               }
             });
@@ -146,55 +146,40 @@ angular.module('loginControllers',[])
       });
     }
     //登陆成功，取得token值之后的操作
-    $scope.loginNext=function(){
-      alert('进入loginnext方法');
+    $scope.loginNext=function(username,userid){
+      //同步deivceid
+      var db = null;
+      db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+      db.executeSql('select * from users where active=1',[],function(rs){
+        var token=rs.rows.item(0).token;
+        var deviceid=rs.rows.item(0).deviceId;
+        $loginData.setDeviceId({
+          token:token,
+          deviceId:deviceid
+        }).success(function(data){
+          $SFTools.myToast('同步成功');
+        }).error(function(error){
+          $SFTools.myToast('同步失败');
+        })
+        //登录成功之后，跳转
+        $state.go('tab.main');
+      })
       //如果没有自动登录，经过login页面的话，需要在这里连接socket
       iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
       iosocket.emit('login', {
-        name: data.user.name,
-        _id: data.user._id,
+        name:username,
+        _id: userid,
         type: 'page'
       });
       //登陆成功，调用推送服务
       window.pushservice.startService();
-      //同步deivceid
-        alert('设备就绪了');
-        var db = null;
-        db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
-        db.executeSql('select * from users where active=1',[],function(rs){
-          var token=rs.rows.item(0).token;
-          var deviceid=rs.rows.item(0).deviceId;
-          alert('设备id是：'+deviceid);
-          $loginData.setDeviceId({
-            token:token,
-            deviceId:deviceid
-          }).success(function(data){
-            alert(JSON.stringify(data))
-          }).error(function(error){
-            alert(JSON.stringify(error));
-          })
-          //登录成功之后，跳转
-          //$state.go('tab.main');
-        })
-
-
     }
 
     $scope.showErrorMesPopup = function(title) {
-      $cordovaToast
-        .show(title, 'short', 'center')
-        .then(function(success) {
-          // success
-        }, function (error) {
-          // error
-        });
+      $SFTools.myToast(title);
     };
     $scope.doRegister=function(){
-      $ionicLoading.show({
-        delay:200
-      });
       $loginData.reg(this.user).success(function(data){
-        $ionicLoading.hide();
         if(data.success === 0){
           $scope.showErrorMesPopup(data.msg);
         }else{
@@ -205,7 +190,6 @@ angular.module('loginControllers',[])
           $state.go('tab.usercenter');
         }
       }).error(function(){
-        $ionicLoading.hide();
         $scope.showErrorMesPopup('网络连接错误');
       });
     }

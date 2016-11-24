@@ -11,25 +11,6 @@ angular.module('mainControllers',['ngCordova'])
       $scope.chats=[];
       $rootScope.NewMessageCount=0;
 
-      document.addEventListener('deviceready',function() {
-        var device = $cordovaDevice.getDevice();
-
-        var cordova = $cordovaDevice.getCordova();
-
-        var model = $cordovaDevice.getModel();
-
-        var platform = $cordovaDevice.getPlatform();
-
-        var uuid = $cordovaDevice.getUUID();
-
-        var version = $cordovaDevice.getVersion();
-
-
-
-      });
-
-
-
       $SFTools.getToken(function(_token){
         console.log('获取的token是：'+_token+_token.userid);
         if(_token&&_token.userid&&_token!=''){
@@ -83,7 +64,7 @@ angular.module('mainControllers',['ngCordova'])
                   }
                 });
                 //收到了消息之后的处理
-                $scope.receiveMessage();
+                $scope.receiveMessage(_token);
               }
             })
             .error(function(){
@@ -91,9 +72,7 @@ angular.module('mainControllers',['ngCordova'])
             });
         }
         else{
-          $SFTools.myToast('getToken这个service提供的token有问题')
           $state.go('login');
-
         }
       });
     });
@@ -249,7 +228,7 @@ angular.module('mainControllers',['ngCordova'])
           })
       }
     }
-    $scope.receiveMessage=function(){
+    $scope.receiveMessage=function(token){
       $rootScope.$on('ReciveMessage',function(event,obj){
         var chat=obj.message;
         var from=obj.from;
@@ -261,7 +240,7 @@ angular.module('mainControllers',['ngCordova'])
         }
 
         //向服务器发送消息，我收到了，你的标志位可以修改了
-        iosocket.emit('ReciveMessage',{chatid:obj.message._id});
+        iosocket.emit('ReciveMessage',{chatid:obj.message._id,deviceid:token.deviceid});
 
         //$SFTools.myToast('web端接收到的消息是'+from.name+'发送的'+chat.content+chat.meta.createAt);
         //存数据库
