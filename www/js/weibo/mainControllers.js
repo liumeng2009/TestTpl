@@ -10,9 +10,7 @@ angular.module('mainControllers',['ngCordova'])
       var _id='';
       $scope.chats=[];
       $rootScope.NewMessageCount=0;
-
       $SFTools.getToken(function(_token){
-        console.log('获取的token是：'+_token+_token.userid);
         if(_token&&_token.userid&&_token!=''){
           var chatXiaoYuan={
             id:0,
@@ -31,7 +29,6 @@ angular.module('mainControllers',['ngCordova'])
           $scope.SendingMessageListener();
           //接收服务器收到了之后，发的通知
           $scope.ServerReciverListener();
-          console.log(_token.token);
           $usercenterData.usercenter({token:_token.token})
             .success(function(data){
               if(data.success===0){
@@ -40,10 +37,10 @@ angular.module('mainControllers',['ngCordova'])
               }
               else{
                 //服务器上的没有收到的消息，接收一下
-                $scope.initMessageFromServer();
+                $scope.initMessageFromServer(_token);
                 //获取socket信息，发送angularjs通知
                 iosocket.on('message',function(obj){
-                  console.log('我接收到了socket的消息');
+                  console.log('page接收到了socket的消息');
                   $rootScope.$broadcast('ReciveMessage',obj);
                 });
                 //服务器说，你发的消息我收到了
@@ -473,8 +470,13 @@ angular.module('mainControllers',['ngCordova'])
 
       });
     }
-    $scope.initMessageFromServer=function(){
+    $scope.initMessageFromServer=function(token){
       console.log('来自服务器的消息');
+      $mainData.not_read_list({token:token.token}).success(function(data){
+        $SFTools.myToast('从服务器同步信息成功'+JSON.stringify(data));
+      }).error(function(error){
+        $SFTools.myToast('从服务器同步信息失败'+error);
+      });
     }
 
     //聊天modal的方法
