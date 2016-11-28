@@ -472,11 +472,135 @@ angular.module('mainControllers',['ngCordova'])
     }
     $scope.initMessageFromServer=function(token){
       console.log('来自服务器的消息');
-      $mainData.not_read_list({token:token.token}).success(function(data){
-        $SFTools.myToast('从服务器同步信息成功'+JSON.stringify(data));
-      }).error(function(error){
-        $SFTools.myToast('从服务器同步信息失败'+error);
+      document.addEventListener('deviceready', function() {
+        var db = null;
+        db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+        db.executeSql('select * from main_message',[],function(rs){
+          var mainArray=[];
+          for(var o=0;o<rs.rows.length;o++){
+            var mainObj={
+              master:rs.rows.item(o).master,
+              relation_user:rs.rows.item(o).relation_user,
+              relation_user_id:rs.rows.item(o).relation_user_id,
+              content:rs.rows.item(o).content,
+              createAt:rs.rows.item(o).createAt,
+              saw:rs.rows.item(o).saw,
+              status:rs.rows.item(o).status,
+              relation_chat_id:rs.rows.item(o).relation_chat_id
+            }
+            mainArray.push(mainArray);
+          }
+          $mainData.not_read_list({token:token.token}).success(function(data){
+            $SFTools.myToast('从服务器同步信息的条数是：'+JSON.stringify(data.chats.length));
+            //获取信息之后，将同步的信息，存入sqlite
+            var insertSqls=[];
+            var insertUser=[];
+            for(var i=0;i<data.chats.length;i++){
+              //首先看和user发生关系的这个人的信息，是否在userinfo表中存在，存在不修改，不存在新增
+              var fromuser=data.chats[i].from;
+              var touser=data.chats[i].to;
+              //同步userinfo表
+              var relation_user={};
+              if(token.userid===fromuser._id.toString) {
+                relation_user={
+                  name:touser.name,
+                  userid:touser._id,
+                  image:touser.image
+                }
+              }
+              else{
+                relation_user={
+                  name:fromuser.name,
+                  userid:fromuser._id,
+                  image:fromuser.image
+                }
+              }
+              var existUser=false;
+              db.executeSql('select count(*) as mycount from userinfo where id=?',[relation_user.userid],function(rs){
+                var count=rs.rows.item(0).mycount;
+                if(count>0){
+                  existUser=true;
+                }
+                else{
+                  existUser=false;
+                }
+                if(!existUser){
+                  if(insertUser.length>0){
+                    for(var j=0;j<insertUser.length;j++){
+                      if(insertUser[j]===relation_user.userid){
+
+                      }
+                      else{
+                        if(j===insertUser.length-1){
+                          insertSqls.push('insert into userinfo values(\'' + relation_user.userid + '\',\'' + relation_user.name + '\',\'' + relation_user.image + '\',1)');
+                          insertUser.push(relation_user.userid);
+                        }
+                      }
+                    }
+                  }
+                  else {
+                    insertSqls.push('insert into userinfo values(\'' + relation_user.userid + '\',\'' + relation_user.name + '\',\'' + relation_user.image + '\',1)');
+                    insertUser.push(relation_user.userid);
+                  }
+                }
+              });
+
+
+            //同步chat
+            var createDate=new Date(data.chats[i].meta.createAt);
+            var chatObj={
+              id:data.chats[i]._id,
+              fromuser:fromuser._id.toString(),
+              touser:touser._id.toString(),
+              content:data.chats[i].content,
+              createAt:createDate.getTime(),
+              saw:0
+            }
+            var existChat=false;
+            db.executeSql('select count(*) as mycount from chat where id=?',[chatObj.id],function(rs){
+              var mycount=rs.rows.item(0).mycount;
+              if(mycount>0){
+                existChat=true;
+              }
+              else{
+                console.log('服务器同步过来的消息，客户端没有，进行插入操作');
+                insertSqls.push('insert into chat values(\''+chatObj.id+'\',\''+chatObj.fromuser+'\',\''+chatObj.touser+'\',\''+chatObj.content+'\',\''+chatObj.createAt+'\',0)')
+              }
+            })
+
+            //同步main_message
+            //得到的服务器消息，需要和sqlite中的main_message作比较 mainArray是当前数据库中的数据
+            relation_user
+
+            }
+            console.log('信息规整完成，插入了'+insertUser.length+'条用户数据，插入了'+insertSqls+'条chat和userinfo数据');
+            db.transaction(function(tx){
+              for(var z=0;z<insertSqls.length;z++){
+                tx.executeSql(insertSqls[z]);
+              }
+            },function(err){
+              console.log('写入数据库出错了'+error);
+            },function(){
+              console.log('写入数据库成功');
+            });
+
+
+          }).error(function(error){
+            $SFTools.myToast('从服务器同步信息失败'+error);
+          });
+
+
+
+
+
+        })
+
+
+
+
+
       });
+
     }
 
     //聊天modal的方法
@@ -623,7 +747,7 @@ angular.module('mainControllers',['ngCordova'])
           var time=new Date();
           var timeid=time.getTime();
           var sendContent=$scope.send.sendMessage;
-          iosocket.emit('private message', _token.userid, $scope.touser._id, sendContent,timeid);
+          iosocket.emit('private message', _token.userid, $scope.touser._id, sendContent,timeid,_token.deviceid);
           //加入发送超时模块,一分钟没收到反馈，就再次发送，一直循环，持续5次。如果网络恢复，也尝试发送
           //超过五次，标识为发送不成功，再次发送需要用户确认
             //将信息存入未发表成功的信息表
