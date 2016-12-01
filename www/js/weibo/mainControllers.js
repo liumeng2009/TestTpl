@@ -583,7 +583,7 @@ angular.module('mainControllers',['ngCordova'])
                 }
 
                 console.log('服务器同步过来的消息，客户端没有，进行插入操作');
-                insertSqls.push('insert into chat values(\''+chatObj.id+'\',\''+chatObj.fromuser+'\',\''+chatObj.touser+'\',\''+chatObj.content+'\',\''+chatObj.createAt+'\',0)')
+                insertSqls.push('insert into chat values(\''+chatObj.id+'\',\''+chatObj.fromuser+'\',\''+chatObj.touser+'\',\''+chatObj.content+'\','+chatObj.createAt+',0)')
 
 
                 //同步main_message
@@ -652,7 +652,7 @@ angular.module('mainControllers',['ngCordova'])
               if(mainArray.length===0){
                 //相当于main_message对象是空的，把服务器的main直接放进去就可以了
                 for(var ss=0;ss<mainServer.length;ss++){
-                  insertSqls.push('insert into main_message values(\''+mainServer[ss].master+'\',\''+mainServer[ss].relation_user+'\',\''+mainServer[ss].relation_user_id+'\',\''+mainServer[ss].content+'\',\''+mainServer[ss].createAt+'\','+mainServer[ss].saw+','+mainServer[ss].status+',\''+mainServer[ss].relation_chat_id+'\')');
+                  insertSqls.push('insert into main_message values(\''+mainServer[ss].master+'\',\''+mainServer[ss].relation_user+'\',\''+mainServer[ss].relation_user_id+'\',\''+mainServer[ss].content+'\','+mainServer[ss].createAt+','+mainServer[ss].saw+','+mainServer[ss].status+',\''+mainServer[ss].relation_chat_id+'\')');
                 }
               }
               else{
@@ -676,7 +676,7 @@ angular.module('mainControllers',['ngCordova'])
                         var relationChatIdUpdate=mainServer[cc].relation_chat_id;
                         var masterUpdate=mainServer[cc].master;
                         var relationUserId=mainServer[cc].relation_user_id;
-                        insertSqls.push('update main_message set content=\''+contentUpdate+'\',createAt=\''+createAtUpdate+'\',saw='+sawUpdate+',relation_chat_id=\''+relationChatIdUpdate+'\' where master=\''+masterUpdate+'\' and relation_user_id=\''+relationChatIdUpdate+'\' and status=1 ');
+                        insertSqls.push('update main_message set content=\''+contentUpdate+'\',createAt='+createAtUpdate+',saw='+sawUpdate+',relation_chat_id=\''+relationChatIdUpdate+'\' where master=\''+masterUpdate+'\' and relation_user_id=\''+relationChatIdUpdate+'\' and status=1 ');
                       }
                       break;
                     }
@@ -684,7 +684,7 @@ angular.module('mainControllers',['ngCordova'])
                       //循环到最后一个
                       if(tt===mainArray.length-1){
                         //说明就是最后的一个了,需要insert
-                        insertSqls.push('insert into main_message values(\''+mainServer[cc].master+'\',\''+mainServer[cc].relation_user+'\',\''+mainServer[cc].relation_user_id+'\',\''+mainServer[cc].content+'\',\''+mainServer[cc].createAt+'\','+mainServer[cc].saw+','+mainServer[cc].status+',\''+mainServer[cc].relation_chat_id+'\')');
+                        insertSqls.push('insert into main_message values(\''+mainServer[cc].master+'\',\''+mainServer[cc].relation_user+'\',\''+mainServer[cc].relation_user_id+'\',\''+mainServer[cc].content+'\','+mainServer[cc].createAt+','+mainServer[cc].saw+','+mainServer[cc].status+',\''+mainServer[cc].relation_chat_id+'\')');
                       }
                       else{
 
