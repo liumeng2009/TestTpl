@@ -2,6 +2,7 @@
   <ion-header-bar class="bar-stable bar-dark">
     <ion-title class="title-left">晓园
       <span ng-if="NewMessageCount>0">({{NewMessageCount}})</span>
+      <span ng-if="LoadingServer" >同步中...</span>
     </ion-title>
     <button class="button ion-android-add"></button>
   </ion-header-bar>

@@ -10,6 +10,7 @@ angular.module('mainControllers',['ngCordova'])
       var _id='';
       $scope.chats=[];
       $rootScope.NewMessageCount=0;
+      $scope.LoadingServer=false;
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
           var chatXiaoYuan={
@@ -472,11 +473,13 @@ angular.module('mainControllers',['ngCordova'])
     }
     $scope.initMessageFromServer=function(token){
       console.log('来自服务器的消息');
+      $scope.LoadingServer=true;
       document.addEventListener('deviceready', function() {
         var db = null;
         db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
         db.executeSql('select * from main_message',[],function(rs){
           var mainArray=[];
+          var userInfoArray=[];
           for(var o=0;o<rs.rows.length;o++){
             var mainObj={
               master:rs.rows.item(o).master,
@@ -490,216 +493,233 @@ angular.module('mainControllers',['ngCordova'])
             }
             mainArray.push(mainArray);
           }
-          $mainData.not_read_list({token:token.token}).success(function(data){
-            $SFTools.myToast('从服务器同步信息的条数是：'+JSON.stringify(data.chats.length));
-            //获取信息之后，将同步的信息，存入sqlite
-            var insertSqls=[];
-            var insertUser=[];
-            var mainServer=[];
-            for(var i=0;i<data.chats.length;i++){
-              //首先看和user发生关系的这个人的信息，是否在userinfo表中存在，存在不修改，不存在新增
-              var fromuser=data.chats[i].from;
-              var touser=data.chats[i].to;
-              //同步userinfo表
-              var relation_user={};
-              if(token.userid===fromuser._id.toString) {
-                relation_user={
-                  name:touser.name,
-                  userid:touser._id,
-                  image:touser.image,
-                  action:'to'
-                }
+          db.executeSql('select * from userinfo',[],function(rsUserInfo){
+            for(var oo=0;oo<rsUserInfo.rows.length;oo++){
+              var userInfoObj={
+                id:rsUserInfo.rows.item(oo).id,
+                name:rsUserInfo.rows.item(oo).name,
+                image:rsUserInfo.rows.item(oo).image,
+                showInMain:rsUserInfo.rows.item(oo).showInMain
               }
-              else{
-                relation_user={
-                  name:fromuser.name,
-                  userid:fromuser._id,
-                  image:fromuser.image,
-                  action:'from'
-                }
-              }
-              var existUser=false;
-              db.executeSql('select count(*) as mycount from userinfo where id=?',[relation_user.userid],function(rs){
-                var count=rs.rows.item(0).mycount;
-                if(count>0){
-                  existUser=true;
+              userInfoArray.push(userInfoObj);
+            }
+            $mainData.not_read_list({token:token.token}).success(function(data){
+              $SFTools.myToast('从服务器同步信息的条数是：'+JSON.stringify(data.chats.length));
+              //获取信息之后，将同步的信息，存入sqlite
+              var insertSqls=[];
+              var insertUser=[];
+              var mainServer=[];
+              for(var i=0;i<data.chats.length;i++){
+                //首先看和user发生关系的这个人的信息，是否在userinfo表中存在，存在不修改，不存在新增
+                var fromuser=data.chats[i].from;
+                var touser=data.chats[i].to;
+                //同步userinfo表
+                var relation_user={};
+                if(token.userid===fromuser._id.toString()) {
+                  relation_user={
+                    name:touser.name,
+                    userid:touser._id,
+                    image:touser.image,
+                    action:'to'
+                  }
                 }
                 else{
-                  existUser=false;
-                }
-                if(!existUser){
-                  if(insertUser.length>0){
-                    for(var j=0;j<insertUser.length;j++){
-                      if(insertUser[j]===relation_user.userid){
-
-                      }
-                      else{
-                        if(j===insertUser.length-1){
-                          insertSqls.push('insert into userinfo values(\'' + relation_user.userid + '\',\'' + relation_user.name + '\',\'' + relation_user.image + '\',1)');
-                          insertUser.push(relation_user.userid);
-                        }
-                      }
-                    }
-                  }
-                  else {
-                    insertSqls.push('insert into userinfo values(\'' + relation_user.userid + '\',\'' + relation_user.name + '\',\'' + relation_user.image + '\',1)');
-                    insertUser.push(relation_user.userid);
+                  relation_user={
+                    name:fromuser.name,
+                    userid:fromuser._id,
+                    image:fromuser.image,
+                    action:'from'
                   }
                 }
-              });
+                console.log('这条有关联系人的信息是：'+relation_user.name+'他的行为是'+relation_user.action);
+                var existUser=false;
 
-
-              //同步chat
-              var createDate=new Date(data.chats[i].meta.createAt);
-              var chatObj={
-                id:data.chats[i]._id,
-                fromuser:fromuser._id.toString(),
-                touser:touser._id.toString(),
-                content:data.chats[i].content,
-                createAt:createDate.getTime(),
-                saw:0
-              }
-              var existChat=false;
-              db.executeSql('select count(*) as mycount from chat where id=?',[chatObj.id],function(rs){
-                var mycount=rs.rows.item(0).mycount;
-                if(mycount>0){
-                  existChat=true;
-                }
-                else{
-                  console.log('服务器同步过来的消息，客户端没有，进行插入操作');
-                  insertSqls.push('insert into chat values(\''+chatObj.id+'\',\''+chatObj.fromuser+'\',\''+chatObj.touser+'\',\''+chatObj.content+'\',\''+chatObj.createAt+'\',0)')
-                }
-              })
-
-              //同步main_message
-              //得到的服务器消息，需要和sqlite中的main_message作比较 mainArray是当前数据库中的数据
-              //把服务器传输过来的数据，做main_message筛选,放在mainServer里面
-              if(mainServer.length===0){
-                var mainServerObj={
-                  master:token.userid,
-                  relation_user:relation_user.name,
-                  relation_user_id:relation_user.userid,
-                  content:data.chats[i].content,
-                  createAt:createDate.getTime(),
-                  saw:relation_user.action==='to'?0:((data.chats[i].saw==="0"||data.chats[i].saw==="1"||data.chats[i].saw==="")?1:0),
-                  status:1,
-                  relation_chat_id:relation_user.action==="to"?"":data.chats[i]._id.toString()
-                }
-                mainServer.push(mainServerObj);
-                console.log('mainServer第一次插入的时候数据是：'+JSON.stringify(mainServer));
-              }
-              else{
-                for(var k=0;k<mainServer.length;k++){
-                  if(mainServer[k].relation_user_id===relation_user.userid){
-                    //比较他们的createAt
-                    if(mainServer[k].createAt>createDate.getTime()){
-                      //说明这条信息和之前那个相比，不新，就不需要更新了
-                    }
-                    else{
-                      //更加新的一条信息，需要更新mainServer
-                      mainServer[k].content=data.chats[i].content;
-                      mainServer[k].createAt=createDate.getTime();
-                      if(relation_user.action==='to'){
-                        mainServer[k].saw=0;
-                      }
-                      else{
-                        mainServer[k].saw=(data.chats[i].saw==="0"||data.chats[i].saw==="1"||data.chats[i].saw==="")?mainServer[k].saw+1:mainServer[k].saw;
-                      }
-                      mainServer[k].relation_chat_id=relation_user.action==="to"?"":data.chats[i]._id.toString();
-                    }
-                  }
-                  else{
-                    //说明是和另一个人的联系
-                    if(k===mainServer.length-1){
-                      //说明是新的，insert进mainServer
-                      var mainServerObj={
-                        master:token.userid,
-                        relation_user:relation_user.name,
-                        relation_user_id:relation_user.userid,
-                        content:data.chats[i].content,
-                        createAt:createDate.getTime(),
-                        saw:relation_user.action==='to'?0:((data.chats[i].saw==="0"||data.chats[i].saw==="1"||data.chats[i].saw==="")?1:0),
-                        status:1,
-                        relation_chat_id:relation_user.action==="to"?"":data.chats[i]._id.toString()
-                      }
-                      mainServer.push(mainServerObj);
+                if(userInfoArray.length>0){
+                  for(var ui=0;ui<userInfoArray.length;ui++){
+                    console.log('循环'+relation_user.userid+'和'+userInfoArray[ui].id);
+                    if(relation_user.userid===userInfoArray[ui].id){
+                      //说明存在，不管
                       break;
                     }
                     else{
-                      //继续循环
+                      if(ui===userInfoArray.length-1){
+                        //说明不存在，插入
+                        console.log(relation_user.name+'不存在插入1');
+                        var userInfoArrayObj={
+                          id:relation_user.userid,
+                          name:relation_user.name,
+                          image:relation_user.image,
+                          showInMain:1
+                        }
+                        userInfoArray.push(userInfoArrayObj);
+                        insertUser.push('insert into userinfo values(\''+userInfoArrayObj.id+'\',\''+userInfoArrayObj.name+'\',\''+userInfoArrayObj.image+'\',1)');
+                        break;
+                      }
                     }
                   }
                 }
-              }
-            }
+                else{
+                  console.log(relation_user.name+'不存在插入2');
+                  var userInfoArrayObj={
+                    id:relation_user.userid,
+                    name:relation_user.name,
+                    image:relation_user.image,
+                    showInMain:1
+                  }
+                  userInfoArray.push(userInfoArrayObj);
+                  insertUser.push('insert into userinfo values(\''+userInfoArrayObj.id+'\',\''+userInfoArrayObj.name+'\',\''+userInfoArrayObj.image+'\',1)');
+                }
 
-            //循环完毕，把mainServer[]和mainArray[]整合，确定这一系列的sql
-            if(mainArray.length===0){
-              //相当于main_message对象是空的，把服务器的main直接放进去就可以了
-              for(var ss=0;ss<mainServer.length;ss++){
-                insertSqls.push('insert into main_message values(\''+mainServer[ss].master+'\',\''+mainServer[ss].relation_user+'\',\''+mainServer[ss].relation_user_id+'\',\''+mainServer[ss].content+'\',\''+mainServer[ss].createAt+'\','+mainServer[ss].saw+','+mainServer[ss].status+',\''+mainServer[ss].relation_chat_id+'\')');
-              }
-            }
-            else{
-              for(var cc=0;cc<mainServer.length;cc++){
-                for(var tt=0;tt<mainArray.length;tt++){
-                  if(mainArray[tt].relation_user_id===mainServer[cc].relation_user_id){
-                    if(mainArray[tt].createAt>mainServer[cc].createAt){
-                      //说明这条信息不新，不用修改了
-                    }
-                    else{
-                      //说明服务器过来的这个消息是新的，修改之
-                      var contentUpdate=mainServer[cc].content;
-                      var createAtUpdate=mainServer[cc].createAt;
-                      var sawUpdate=0;
-                      if(mainServer[cc].relation_chat_id===""){
 
+                //同步chat
+                var createDate=new Date(data.chats[i].meta.createAt);
+                var chatObj={
+                  id:data.chats[i]._id,
+                  fromuser:fromuser._id.toString(),
+                  touser:touser._id.toString(),
+                  content:data.chats[i].content,
+                  createAt:createDate.getTime(),
+                  saw:0
+                }
+
+                console.log('服务器同步过来的消息，客户端没有，进行插入操作');
+                insertSqls.push('insert into chat values(\''+chatObj.id+'\',\''+chatObj.fromuser+'\',\''+chatObj.touser+'\',\''+chatObj.content+'\',\''+chatObj.createAt+'\',0)')
+
+
+                //同步main_message
+                //得到的服务器消息，需要和sqlite中的main_message作比较 mainArray是当前数据库中的数据
+                //把服务器传输过来的数据，做main_message筛选,放在mainServer里面
+                if(mainServer.length===0){
+                  var mainServerObj={
+                    master:token.userid,
+                    relation_user:relation_user.name,
+                    relation_user_id:relation_user.userid,
+                    content:data.chats[i].content,
+                    createAt:createDate.getTime(),
+                    saw:relation_user.action==='to'?0:((data.chats[i].saw==="0"||data.chats[i].saw==="1"||data.chats[i].saw==="")?1:0),
+                    status:1,
+                    relation_chat_id:relation_user.action==="to"?"":data.chats[i]._id.toString()
+                  }
+                  mainServer.push(mainServerObj);
+                  console.log('mainServer第一次插入的时候数据是：'+JSON.stringify(mainServer));
+                }
+                else{
+                  for(var k=0;k<mainServer.length;k++){
+                    if(mainServer[k].relation_user_id===relation_user.userid){
+                      //比较他们的createAt
+                      if(mainServer[k].createAt> createDate.getTime()){
+                        //说明这条信息和之前那个相比，不新，就不需要更新了
                       }
                       else{
-                        sawUpdate=mainArray[tt].saw+1;
+                        //更加新的一条信息，需要更新mainServer
+                        mainServer[k].content=data.chats[i].content;
+                        mainServer[k].createAt=createDate.getTime();
+                        if(relation_user.action==='to'){
+                          mainServer[k].saw=0;
+                        }
+                        else{
+                          mainServer[k].saw=(data.chats[i].saw==="0"||data.chats[i].saw==="1"||data.chats[i].saw==="")?mainServer[k].saw+1:mainServer[k].saw;
+                        }
+                        mainServer[k].relation_chat_id=relation_user.action==="to"?"":data.chats[i]._id.toString();
                       }
-                      var relationChatIdUpdate=mainServer[cc].relation_chat_id;
-                      var masterUpdate=mainServer[cc].master;
-                      var relationUserId=mainServer[cc].relation_user_id;
-                      insertSqls.push('update main_message set content=\''+contentUpdate+'\',createAt=\''+createAtUpdate+'\',saw='+sawUpdate+',relation_chat_id=\''+relationChatIdUpdate+'\' where master=\''+masterUpdate+'\' and relation_user_id=\''+relationChatIdUpdate+'\' and status=1 ');
-                    }
-                    break;
-                  }
-                  else{
-                    //循环到最后一个
-                    if(tt===mainArray.length-1){
-                      //说明就是最后的一个了,需要insert
-                      insertSqls.push('insert into main_message values(\''+mainServer[cc].master+'\',\''+mainServer[cc].relation_user+'\',\''+mainServer[cc].relation_user_id+'\',\''+mainServer[cc].content+'\',\''+mainServer[cc].createAt+'\','+mainServer[cc].saw+','+mainServer[cc].status+',\''+mainServer[cc].relation_chat_id+'\')');
                     }
                     else{
-
+                      //说明是和另一个人的联系
+                      if(k===mainServer.length-1){
+                        //说明是新的，insert进mainServer
+                        var mainServerObj={
+                          master:token.userid,
+                          relation_user:relation_user.name,
+                          relation_user_id:relation_user.userid,
+                          content:data.chats[i].content,
+                          createAt:createDate.getTime(),
+                          saw:relation_user.action==='to'?0:((data.chats[i].saw==="0"||data.chats[i].saw==="1"||data.chats[i].saw==="")?1:0),
+                          status:1,
+                          relation_chat_id:relation_user.action==="to"?"":data.chats[i]._id.toString()
+                        }
+                        mainServer.push(mainServerObj);
+                        break;
+                      }
+                      else{
+                        //继续循环
+                      }
                     }
                   }
                 }
               }
-            }
-            console.log('信息规整完成，插入了'+insertUser.length+'条用户数据，插入了'+insertSqls+'条chat和userinfo数据');
-            console.log('同步的聊天信息sql是：'+JSON.stringify(insertSqls));
-            console.log('同步的用户信息sql是：'+JSON.stringify(insertUser));
-            db.transaction(function(tx){
-              for(var u=0;u<insertUser.length;u++){
-                tx.executeSql(insertSqls[u]);
+
+              //循环完毕，把mainServer[]和mainArray[]整合，确定这一系列的sql
+              if(mainArray.length===0){
+                //相当于main_message对象是空的，把服务器的main直接放进去就可以了
+                for(var ss=0;ss<mainServer.length;ss++){
+                  insertSqls.push('insert into main_message values(\''+mainServer[ss].master+'\',\''+mainServer[ss].relation_user+'\',\''+mainServer[ss].relation_user_id+'\',\''+mainServer[ss].content+'\',\''+mainServer[ss].createAt+'\','+mainServer[ss].saw+','+mainServer[ss].status+',\''+mainServer[ss].relation_chat_id+'\')');
+                }
               }
-              for(var z=0;z<insertSqls.length;z++){
-                tx.executeSql(insertSqls[z]);
+              else{
+                for(var cc=0;cc<mainServer.length;cc++){
+                  for(var tt=0;tt<mainArray.length;tt++){
+                    if(mainArray[tt].relation_user_id===mainServer[cc].relation_user_id){
+                      if(mainArray[tt].createAt>mainServer[cc].createAt){
+                        //说明这条信息不新，不用修改了
+                      }
+                      else{
+                        //说明服务器过来的这个消息是新的，修改之
+                        var contentUpdate=mainServer[cc].content;
+                        var createAtUpdate=mainServer[cc].createAt;
+                        var sawUpdate=0;
+                        if(mainServer[cc].relation_chat_id===""){
+
+                        }
+                        else{
+                          sawUpdate=mainArray[tt].saw+1;
+                        }
+                        var relationChatIdUpdate=mainServer[cc].relation_chat_id;
+                        var masterUpdate=mainServer[cc].master;
+                        var relationUserId=mainServer[cc].relation_user_id;
+                        insertSqls.push('update main_message set content=\''+contentUpdate+'\',createAt=\''+createAtUpdate+'\',saw='+sawUpdate+',relation_chat_id=\''+relationChatIdUpdate+'\' where master=\''+masterUpdate+'\' and relation_user_id=\''+relationChatIdUpdate+'\' and status=1 ');
+                      }
+                      break;
+                    }
+                    else{
+                      //循环到最后一个
+                      if(tt===mainArray.length-1){
+                        //说明就是最后的一个了,需要insert
+                        insertSqls.push('insert into main_message values(\''+mainServer[cc].master+'\',\''+mainServer[cc].relation_user+'\',\''+mainServer[cc].relation_user_id+'\',\''+mainServer[cc].content+'\',\''+mainServer[cc].createAt+'\','+mainServer[cc].saw+','+mainServer[cc].status+',\''+mainServer[cc].relation_chat_id+'\')');
+                      }
+                      else{
+
+                      }
+                    }
+                  }
+                }
               }
-            },function(err){
-              console.log('写入数据库出错了'+error);
-            },function(){
-              $scope.initMessageFromSql(token.userid);
-              console.log('写入数据库成功,服务器可以修改标志位了,把这个用户相关的消息的标志位都改成这台设备的');
-              $mainData.setNewDeviceId({userid:token.userid,deviceid:token.deviceid,token:token.token});
+              console.log('信息规整完成，插入了'+insertUser.length+'条用户数据，插入了'+insertSqls.length+'条chat和userinfo数据');
+              console.log('同步的聊天信息sql是：'+JSON.stringify(insertSqls));
+              console.log('同步的用户信息sql是：'+JSON.stringify(insertUser));
+              db.transaction(function(tx){
+                for(var u=0;u<insertUser.length;u++){
+                  tx.executeSql(insertUser[u]);
+                }
+                for(var z=0;z<insertSqls.length;z++){
+                  tx.executeSql(insertSqls[z]);
+                }
+              },function(err){
+                console.log('写入数据库出错了'+error);
+              },function(){
+                $scope.initMessageFromSql(token.userid);
+                $scope.LoadingServer=false;
+                console.log('写入数据库成功,服务器可以修改标志位了,把这个用户相关的消息的标志位都改成这台设备的');
+                $mainData.setNewDeviceId({userid:token.userid,deviceid:token.deviceid,token:token.token});
+              });
+            }).error(function(error){
+              $SFTools.myToast('从服务器同步信息失败'+error);
             });
 
 
-          }).error(function(error){
-            $SFTools.myToast('从服务器同步信息失败'+error);
-          });
+
+          })
+
+
         })
       });
     }

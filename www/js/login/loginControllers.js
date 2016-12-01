@@ -64,10 +64,6 @@ angular.module('loginControllers',[])
         noClick:true
       };
       $loginData.login(this.user).success(function(data){
-        $scope.loginPage={
-          action:'登录',
-          noClick:false
-        };
         console.log(JSON.stringify(data));
         if (data.success !== 0) {
           //成功，把token存入Sql
@@ -157,6 +153,10 @@ angular.module('loginControllers',[])
             token: token,
             deviceId: deviceid
           }).success(function (data) {
+            $scope.loginPage={
+              action:'登录',
+              noClick:false
+            };
             $SFTools.myToast('登录成功');
             //登录成功之后，跳转
             $state.go('tab.main');
