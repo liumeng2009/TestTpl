@@ -13,15 +13,7 @@ angular.module('mainControllers',['ngCordova'])
       $scope.LoadingServer=false;
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
-          var chatXiaoYuan={
-            id:0,
-            name:'晓园团队',
-            userid:0,
-            content:'欢迎加入晓园IM',
-            createAt:_token.createAt,
-            new:0
-          };
-          $scope.chats.push(chatXiaoYuan);
+          $scope.initChat(_token);
           //从sql找到列表数据
           $scope.initMessageFromSql(_token.userid);
           //接收“用户看过了”这条消息
@@ -373,6 +365,17 @@ angular.module('mainControllers',['ngCordova'])
         $scope.$apply();
       })
     }
+    $scope.initChat=function(_token){
+      var chatXiaoYuan={
+        id:0,
+        name:'晓园团队',
+        userid:0,
+        content:'欢迎加入晓园IM',
+        createAt:_token.createAt,
+        new:0
+      };
+      $scope.chats.push(chatXiaoYuan);
+    }
     $scope.initMessageFromSql=function(touser){
       document.addEventListener('deviceready', function() {
         //从sql读取今天并且没有查看过的所有信息
@@ -706,6 +709,8 @@ angular.module('mainControllers',['ngCordova'])
               },function(err){
                 console.log('写入数据库出错了'+error);
               },function(){
+                $scope.chats=[];
+                $scope.initChat(token);
                 $scope.initMessageFromSql(token.userid);
                 $scope.LoadingServer=false;
                 console.log('写入数据库成功,服务器可以修改标志位了,把这个用户相关的消息的标志位都改成这台设备的');
@@ -934,8 +939,9 @@ angular.module('mainControllers',['ngCordova'])
             $scope.messages.push(messageper);
           }
           $scope.send.sendMessage = '';
+          //$ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
           $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
-          //$scope.$apply();
+          $scope.$apply();
         }
       });
     };
