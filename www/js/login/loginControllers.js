@@ -25,7 +25,7 @@ angular.module('loginControllers',[])
       //$scope.regStart=true;
     }
     $scope.showFind=function(){
-      $scope.showErrorMesPopup('未完成');
+      $SFTools.myToast('未完成');
     }
     $scope.hideReg=function(){
       $scope.modal_reg.hide();
@@ -46,18 +46,6 @@ angular.module('loginControllers',[])
     $scope.backLeft=function(){
       $state.go(-1);
     }
-    $scope.scheduleSingleNotification = function () {
-      $cordovaLocalNotification.schedule({
-        id: 1,
-        title: 'Title here',
-        text: 'Text here',
-        data: {
-          customProperty: 'custom value'
-        }
-      }).then(function (result) {
-        // ...
-      });
-    };
     $scope.doLogin=function(){
       $scope.loginPage={
         action:'登录中...',
@@ -130,14 +118,14 @@ angular.module('loginControllers',[])
             })
           });
         } else {
-          $scope.showErrorMesPopup(data.success + data.msg);
+          $SFTools.myToast(data.success + data.msg);
         }
       }).error(function(data,status,headers,config){
         $scope.loginPage={
           action:'登录',
           noClick:false
         };
-        $scope.showErrorMesPopup('error'+data);
+        $SFTools.myToast('error'+data);
       });
     }
     //登陆成功，取得token值之后的操作
@@ -185,22 +173,18 @@ angular.module('loginControllers',[])
       window.pushservice.startService();
     }
 
-    $scope.showErrorMesPopup = function(title) {
-      $SFTools.myToast(title);
-    };
     $scope.doRegister=function(){
       $loginData.reg(this.user).success(function(data){
         if(data.success === 0){
-          $scope.showErrorMesPopup(data.msg);
+          $SFTools.myToast(data);
         }else{
-          //成功，把token存入localStorage
-          $window.localStorage.accesstoken=data.token;
-          //$ionicHistory.goBack(-1);
+          $SFTools.myToast('注册成功');
+          $scope.user.password="";
           $scope.modal_reg.hide();
-          $state.go('tab.usercenter');
+          $state.go('login');
         }
       }).error(function(){
-        $scope.showErrorMesPopup('网络连接错误');
+        $SFTools.myToast('网络连接错误');
       });
     }
   }]);

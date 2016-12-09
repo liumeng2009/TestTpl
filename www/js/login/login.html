@@ -41,7 +41,7 @@
         <form role="form" name="regForm" novalidate>
         <div class="list list-inset">
           <label class="item item-input m10">
-          <input type="text" placeholder="请输入用户名" ng-focus="regStart" required ng-minlength="6" ng-maxlength="12" ng-model="user.username" name="username" id="username">
+          <input type="text" placeholder="请输入用户名" ng-focus="regStart" required ng-maxlength="12" ng-model="user.username" name="username" id="username">
           <i class="ion-close-round padding red login-ico" ng-show="regForm.username.$dirty && regForm.username.$invalid"></i>
           <i class="ion-checkmark-round padding green login-ico" ng-show="regForm.username.$dirty && regForm.username.$valid"></i>
           </label>

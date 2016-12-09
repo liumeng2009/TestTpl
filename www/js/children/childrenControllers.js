@@ -5,6 +5,7 @@ var selectPop;
 angular.module('childrenControllers',[])
   .controller('ChildrenCtrl',['$scope','$rootScope','$ionicModal','$state','$usercenterData','$schoolData','$gradeData','$childrenData','$ionicLoading','$ionicPopup','$timeout','$window','$SFTools',function($scope,$rootScope,$ionicModal,$state,$usercenterData,$schoolData,$gradeData,$childrenData,$ionicLoading,$ionicPopup,$timeout,$window,$SFTools){
     $scope.$on('$ionicView.afterEnter',function(){
+      $ionicLoading.show();
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
           $childrenData.list({token:_token.token})
@@ -12,6 +13,7 @@ angular.module('childrenControllers',[])
               if(data.success === 0){
                 $SFTools.myToast(data.msg);
               }else{
+                $ionicLoading.hide();
                 $scope.students=data.students;
 
                 //确定studentnow
@@ -59,6 +61,7 @@ angular.module('childrenControllers',[])
               }
             })
             .error(function(){
+              $ionicLoading.hide();
               $SFTools.myToast('网络连接错误');
             });
         }
@@ -148,12 +151,22 @@ angular.module('childrenControllers',[])
     }).then(function(modal) {
       $scope.modal_Student_Select = modal;
     });
+
+    $ionicModal.fromTemplateUrl('templates/chat_page.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function(modal) {
+      $scope.chat_Page = modal;
+    });
+
     $scope.openModal=function(schoolid){
       $scope.modal.show();
     }
     $scope.openStudentSelectModal=function(studentid){
       $scope.modal_Student_Select.show();
     }
+    $scope.openChat
+
     $scope.setSchoolNow=function(){
       $scope.orgnow.sname=this.school.name;
       $scope.orgnow._sid=this.school._id;
