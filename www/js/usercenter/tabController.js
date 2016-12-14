@@ -2,15 +2,35 @@
  * Created by liumeng on 2016/10/13.
  */
 angular.module('tabControllers',[])
-  .controller('TabCtrl',['$scope','$rootScope','$location','$state','$SFTools','$ionicModal','$ionicScrollDelegate','$timeout','$ionicPlatform',function($scope,$rootScope,$location,$state,$SFTools,$ionicModal,$ionicScrollDelegate,$timeout,$ionicPlatform){
-    $scope.$on('$ionicView.loaded',function(){
+  .controller('TabCtrl',['$scope','$rootScope','$location','$state','$SFTools','$ionicModal','$ionicScrollDelegate','$timeout','$ionicPlatform','$mainData','$cordovaNetwork','$cordovaNativeAudio',function($scope,$rootScope,$location,$state,$SFTools,$ionicModal,$ionicScrollDelegate,$timeout,$ionicPlatform,$mainData,$cordovaNetwork,$cordovaNativeAudio){
+    $rootScope.isOnline=true;
+    $scope.$on('$ionicView.afterEnter',function(){
       $SFTools.getStartPage(function(value){
         //alert('从shared取出来的startPage值是'+value);
       });
+      //检查网络状况
+      document.addEventListener("deviceready",function(){
+        if($cordovaNetwork.isOnline()){
+          $rootScope.isOnline=true;
+        }
+        else{
+          $rootScope.isOnline=false;
+        }
+      });
+
+
+
+      $SFTools.getToken(function(token){
+          if(token&&token.userid&&token!=''){
+            if(!isSync){
+              $scope.initMessageFromServer(token);
+            }
+          }
+      })
     });
     $ionicModal.fromTemplateUrl('templates/modal_add.html', {
       scope: $scope,
-      animation: 'slide-in-left'
+      animation: 'none'
     }).then(function(modal) {
       $scope.modal = modal;
     });
@@ -64,6 +84,8 @@ angular.module('tabControllers',[])
 
           $scope.receiveMessagePerson(userid);
 
+          $scope.NoReadListener(_token);
+
           //确认对方的身份信息
           $usercenterData.user_by_id({token:_token.token,id:userid})
             .success(function(data){
@@ -84,9 +106,11 @@ angular.module('tabControllers',[])
       }
 
     }
-
     //聊天modal的方法
     $scope.messages=[];
+    $scope.popMessage={
+      show:false
+    }
     $scope.keyBoardStatus=false;
     $scope.getMessageFromSql=function(_token,touser){
       //alert('取得最近三天的聊天记录'+_token.userid+_token.token);
@@ -100,7 +124,7 @@ angular.module('tabControllers',[])
         DateSwap.setHours(0);
         DateSwap.setMinutes(0);
         DateSwap.setSeconds(0);
-        var resultThreeDaysAgo=new Date(DateSwap.getTime()-2*24*3600*1000);
+        var resultThreeDaysAgo=new Date(DateSwap.getTime()-7*24*3600*1000);
         var sqlStr='select fromuser,touser,content,createAt,id as status from chat'+
           ' where createAt>='+resultThreeDaysAgo.getTime()+' and'+
           ' (fromuser=\''+_token.userid+'\' and touser=\''+touser+'\''
@@ -345,10 +369,21 @@ angular.module('tabControllers',[])
           $scope.$apply();
         }
         else{
-          //说明不是这个人发的,发出通知
-          $scope.scheduleSingleNotification(obj.from.name,obj.message.content);
-        }
+          //说明不是这个人发的,做一个浮动卡片，从上面
+          //$scope.scheduleSingleNotification(obj.from.name,obj.message.content);
+          $scope.popMessage.show=true;
+          $scope.popMessage.name=obj.from.name;
+          $scope.popMessage.message=obj.message.content;
+          $scope.$apply();
+          $timeout(function(){
+            $scope.popMessage.show=false;
+          },2000);
+          console.log('接到了另一个人的消息'+obj.from.name+obj.message.content);
+          //铃声
 
+
+
+        }
       })
       $rootScope.$on('ServerRecive'+userid,function(event,obj){
         // alert('接到了angularjs的广播，广播名称是'+'ServerRecive'+$stateParams.userid+'服务器说，我收到了，你做自己的处理吧'+obj.timeid+obj.from+obj.to+obj.message.content+'事件名称是');
@@ -399,13 +434,13 @@ angular.module('tabControllers',[])
         })
       });
     }
-
     //从服务器同步离线消息，并发出全局通知
     $scope.initMessageFromServer=function(token){
       $scope.LoadingServer=true;
       document.addEventListener('deviceready', function() {
         var db = null;
         db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+        //获得当前main界面的数据
         db.executeSql('select * from main_message',[],function(rs){
           var mainArray=[];
           var userInfoArray=[];
@@ -422,6 +457,7 @@ angular.module('tabControllers',[])
             }
             mainArray.push(mainArray);
           }
+          //获得当前userinfo表的信息
           db.executeSql('select * from userinfo',[],function(rsUserInfo){
             for(var oo=0;oo<rsUserInfo.rows.length;oo++){
               var userInfoObj={
@@ -432,12 +468,16 @@ angular.module('tabControllers',[])
               }
               userInfoArray.push(userInfoObj);
             }
+            //服务器上存的7天内的，和这个客户端不一致的所有消息
             $mainData.not_read_list({token:token.token}).success(function(data){
-              $SFTools.myToast('从服务器同步信息的条数是：'+JSON.stringify(data.chats));
+              $SFTools.myToast('从服务器同步信息的条数是：'+data.chats.length);
               //获取信息之后，将同步的信息，存入sqlite
               var insertSqls=[];
               var insertUser=[];
               var mainServer=[];
+
+              var chatResult=[];
+
               for(var i=0;i<data.chats.length;i++){
                 //首先看和user发生关系的这个人的信息，是否在userinfo表中存在，存在不修改，不存在新增
                 var fromuser=data.chats[i].from;
@@ -510,6 +550,7 @@ angular.module('tabControllers',[])
                   createAt:createDate.getTime(),
                   saw:0
                 }
+                chatResult.push(chatObj);
 
                 console.log('服务器同步过来的消息，客户端没有，进行插入操作');
                 insertSqls.push('insert into chat values(\''+chatObj.id+'\',\''+chatObj.fromuser+'\',\''+chatObj.touser+'\',\''+chatObj.content+'\','+chatObj.createAt+',0)')
@@ -579,10 +620,13 @@ angular.module('tabControllers',[])
               }
 
               //循环完毕，把mainServer[]和mainArray[]整合，确定这一系列的sql
+              //mainResult这个数组，用来给其他页面，作为广播的一个参数
+              var mainResult=[];
               if(mainArray.length===0){
                 //相当于main_message对象是空的，把服务器的main直接放进去就可以了
                 for(var ss=0;ss<mainServer.length;ss++){
                   insertSqls.push('insert into main_message values(\''+mainServer[ss].master+'\',\''+mainServer[ss].relation_user+'\',\''+mainServer[ss].relation_user_id+'\',\''+mainServer[ss].content+'\','+mainServer[ss].createAt+','+mainServer[ss].saw+','+mainServer[ss].status+',\''+mainServer[ss].relation_chat_id+'\')');
+                  mainResult.push(mainServer[ss]);
                 }
               }
               else{
@@ -607,6 +651,17 @@ angular.module('tabControllers',[])
                         var masterUpdate=mainServer[cc].master;
                         var relationUserId=mainServer[cc].relation_user_id;
                         insertSqls.push('update main_message set content=\''+contentUpdate+'\',createAt='+createAtUpdate+',saw='+sawUpdate+',relation_chat_id=\''+relationChatIdUpdate+'\' where master=\''+masterUpdate+'\' and relation_user_id=\''+relationChatIdUpdate+'\' and status=1 ');
+                        var mainResultObj={
+                          master:masterUpdate,
+                          relation_user:mainServer[cc].relation_user,
+                          relation_user_id:relationUserId,
+                          content:contentUpdate,
+                          createAt:createAtUpdate,
+                          saw:sawUpdate,
+                          status:1,
+                          relation_chat_id:relationChatIdUpdate
+                        }
+                        mainResult.push(mainResultObj);
                       }
                       break;
                     }
@@ -615,6 +670,17 @@ angular.module('tabControllers',[])
                       if(tt===mainArray.length-1){
                         //说明就是最后的一个了,需要insert
                         insertSqls.push('insert into main_message values(\''+mainServer[cc].master+'\',\''+mainServer[cc].relation_user+'\',\''+mainServer[cc].relation_user_id+'\',\''+mainServer[cc].content+'\','+mainServer[cc].createAt+','+mainServer[cc].saw+','+mainServer[cc].status+',\''+mainServer[cc].relation_chat_id+'\')');
+                        var mainResultObj={
+                          master:mainServer[cc].master,
+                          relation_user:mainServer[cc].relation_user,
+                          relation_user_id:mainServer[cc].relation_user_id,
+                          content:mainServer[cc].content,
+                          createAt:mainServer[cc].createAt,
+                          saw:mainServer[cc].saw,
+                          status:1,
+                          relation_chat_id:mainServer[cc].relation_chat_id
+                        }
+                        mainResult.push(mainResultObj);
                       }
                       else{
 
@@ -637,24 +703,43 @@ angular.module('tabControllers',[])
                 console.log('写入数据库出错了'+error);
               },function(){
                 $scope.chats=[];
-                $scope.initChat(token);
-                $scope.initMessageFromSql(token.userid);
+                if(mainResult.length>0||chatResult.length>0) {
+                  console.log('服务器同步了消息，发出通知');
+                  $rootScope.$broadcast('ReceiveNoRead', {mainArray: mainResult, chatArray: chatResult});
+                }
                 $scope.LoadingServer=false;
                 console.log('写入数据库成功,服务器可以修改标志位了,把这个用户相关的消息的标志位都改成这台设备的');
                 $mainData.setNewDeviceId({userid:token.userid,deviceid:token.deviceid,token:token.token});
+                isSync=true;
               });
             }).error(function(error){
               $SFTools.myToast('从服务器同步信息失败'+error);
             });
-
-
-
           })
-
-
         })
       });
     }
+    $scope.NoReadListener=function(token){
+      $rootScope.$on('SendingMessage',function(event,obj){
+        console.log('chat页面收到了服务器同步的信息，同时开始同步chat页面。');
+        $scope.getMessageFromSql(token,$rootScope.touser.userid);
+      });
+    }
+
+    //断线重连触发，触发后，执行initMessageFromServer
+
+    $rootScope.$on('$cordovaNetwork:online', function(event, networkState){
+      console.log('连上网了，同步服务器消息');
+      $SFTools.getToken(function(token){
+        $scope.initMessageFromServer(token);
+      });
+      $rootScope.isOnline=true;
+    });
+
+    $rootScope.$on('$cordovaNetwork:offline', function(event, networkState){
+      $rootScope.isOnline=false;
+    });
+
 
 
   }]);

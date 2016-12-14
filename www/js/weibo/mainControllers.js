@@ -22,6 +22,9 @@ angular.module('mainControllers',['ngCordova'])
           $scope.SendingMessageListener();
           //接收服务器收到了之后，发的通知
           $scope.ServerReciverListener();
+
+          $scope.NoReadListener();
+
           $usercenterData.usercenter({token:_token.token})
             .success(function(data){
               if(data.success===0){
@@ -30,7 +33,7 @@ angular.module('mainControllers',['ngCordova'])
               }
               else{
                 //服务器上的没有收到的消息，接收一下
-                $scope.initMessageFromServer(_token);
+
                 //获取socket信息，发送angularjs通知
                 iosocket.on('message',function(obj){
                   console.log('page接收到了socket的消息');
@@ -334,6 +337,89 @@ angular.module('mainControllers',['ngCordova'])
       });
     }
 
+    $scope.NoReadListener=function(){
+      $rootScope.$on('ReceiveNoRead',function(event,obj){
+        console.log('main页面收到了服务器同步的信息，同时开始同步main页面。');
+        var mainArray=obj.mainArray;
 
+        //mainArray排序，createAt小的在前面
+        for(var i=0;i<mainArray.length;i++){
+          for(var j=0;j<mainArray.length-i-1;j++){
+            if(mainArray[j].createAt>mainArray[j+1].createAt){
+              var temp=mainArray[j];
+              mainArray[j]=mainArray[j+1];
+              mainArray[j+1]=temp;
+            }
+          }
+        }
+
+        console.log(JSON.stringify(mainArray));
+
+        //将有关的main加入到chats[]对象中
+        //mainArray中的内容 逐条 和现在chats[]中的信息做比较，做更新和新增
+
+        if($scope.chats.length===1){
+          console.log('第一种情况');
+          //说明只有一个欢迎消息,那就把所有的mainArray信息,按照时间排序放到chats内
+          for(var i=0;i<mainArray.length;i++){
+            var chatObj={
+              id:'',
+              name:mainArray[i].relation_user,
+              userid:mainArray[i].relation_user_id,
+              content:mainArray[i].content,
+              createAt:mainArray[i].createAt,
+              new:mainArray[i].saw,
+              type:mainArray[i].status
+            };
+            $scope.chats.push(chatObj);
+          }
+        }
+        else{
+
+          //有死循环
+
+          for(var i=0;i<mainArray.length;i++){
+            console.log('i是：'+i);
+            for(var j=0;j<$scope.chats.length;j++){
+              console.log('j是：'+j);
+              console.log('数据是'+$scope.chats[j].relation_user_id+'和'+mainArray[i].relation_user_id+'和'+mainArray[i].createAt+'和'+$scope.chats[j].createAt);
+              if($scope.chats[j].userid===mainArray[i].relation_user_id&&mainArray[i].createAt>$scope.chats[j].createAt){
+                console.log('同一个人的信息');
+                $scope.chats[j].content=mainArray[i].content;
+                $scope.chats[j].createAt=mainArray[i].createAt;
+                if($scope.chats[j].saw===0){
+                  $scope.chats[j].saw=mainArray[i].saw;
+                }
+                else{
+                  $scope.chats[j].saw=  parseInt($scope.chats[j].saw)+parseInt(mainArray[i].saw);
+                }
+                break;
+              }
+              else{
+                console.log('不同一个人的信息');
+                if(j===$scope.chats.length-1){
+                  console.log('新的一个人的信息');
+                  var chatObj={
+                    id:'',
+                    name:mainArray[i].relation_user,
+                    userid:mainArray[i].relation_user_id,
+                    content:mainArray[i].content,
+                    createAt:mainArray[i].createAt,
+                    new:mainArray[i].saw,
+                    type:mainArray[i].status
+                  };
+                  $scope.chats.push(chatObj);
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        console.log(JSON.stringify($scope.chats))
+        $scope.$apply();
+
+      });
+    }
 
   }]);

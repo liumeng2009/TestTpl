@@ -28,12 +28,24 @@ navigation history that also transitions its views in and out.
       </button>
       <ion-title>
         {{touser.name}}
-      <span ng-if="touser.online" class="chat-avatar">
-      </span>
-      <span ng-if="!touser.online" class="chat-avatar-gray">
-      </span>
       </ion-title>
     </ion-header-bar>
+
+    <!-- 其他人来了消息，做一个浮动弹窗 -->
+    <div class="card pop-card" ng-if="popMessage.show">
+      <div class="item item-text-wrap">
+        <label>
+          <img ng-src="img/avata_128.jpg">
+        </label>
+        <div class="right">
+          <div class="name">
+            {{popMessage.name}}
+          </div>
+          <p class="content">{{popMessage.message}}</p>
+        </div>
+      </div>
+    </div>
+
     <ion-content style="background-color: #ebebeb"  delegate-handle="chatScroll">
       <input id="from" type="hidden" ng-value="from" >
       <input id="to" type="hidden" ng-value="to" >

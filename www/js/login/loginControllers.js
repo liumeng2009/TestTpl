@@ -31,8 +31,8 @@ angular.module('loginControllers',[])
       $scope.modal_reg.hide();
     }
     $scope.user={
-      username:'',
-      password:''
+      username:'dreams',
+      password:'123456'
     }
     $scope.seePassword=false;
     $scope.changeSeePassword=function(){

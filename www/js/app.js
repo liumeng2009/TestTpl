@@ -19,6 +19,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
   });
   TIME_SPACING=5;
   iosocket='';
+  isSync=false;
   $SFTools.getToken(function(_token){
     if(_token&&_token.userid&&_token!='') {
       iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
