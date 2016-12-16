@@ -2,8 +2,9 @@
  * Created by liumeng on 2016/10/13.
  */
 angular.module('tabControllers',[])
-  .controller('TabCtrl',['$scope','$rootScope','$location','$state','$SFTools','$ionicModal','$ionicScrollDelegate','$timeout','$ionicPlatform','$mainData','$cordovaNetwork','$cordovaNativeAudio',function($scope,$rootScope,$location,$state,$SFTools,$ionicModal,$ionicScrollDelegate,$timeout,$ionicPlatform,$mainData,$cordovaNetwork,$cordovaNativeAudio){
+  .controller('TabCtrl',['$scope','$rootScope','$location','$state','$SFTools','$ionicModal','$ionicScrollDelegate','$timeout','$ionicPlatform','$mainData','$cordovaNetwork','$interval',function($scope,$rootScope,$location,$state,$SFTools,$ionicModal,$ionicScrollDelegate,$timeout,$ionicPlatform,$mainData,$cordovaNetwork,$interval){
     $rootScope.isOnline=true;
+    $scope.retryList=[];
     $scope.$on('$ionicView.afterEnter',function(){
       $SFTools.getStartPage(function(value){
         //alert('从shared取出来的startPage值是'+value);
@@ -17,20 +18,21 @@ angular.module('tabControllers',[])
           $rootScope.isOnline=false;
         }
       });
-
-
-
       $SFTools.getToken(function(token){
-          if(token&&token.userid&&token!=''){
-            if(!isSync){
-              $scope.initMessageFromServer(token);
-            }
+        if(token&&token.userid&&token!=''){
+          if(!isSync){
+            $scope.initMessageFromServer(token);
           }
+        }
+        $scope.retry(token);
       })
+
+
+
     });
     $ionicModal.fromTemplateUrl('templates/modal_add.html', {
       scope: $scope,
-      animation: 'none'
+      animation: 'slide-in-left'
     }).then(function(modal) {
       $scope.modal = modal;
     });
@@ -247,15 +249,29 @@ angular.module('tabControllers',[])
       });
     }
     $scope.send=function(){
+      //send之后，加入retryList
+      //各属性描述：   发给谁的  循环次数  用户点击发送的时间  重试倒计时  在视图上的对象实例 一分钟重试一次，如果收到了服务器的回应，说明收到了，就从数组内删除
+      // retry的结构是 .touser   .loop     .startTime          .retryTime  viewObject
+
+
       console.log('和我聊天的人是：'+$rootScope.touser._id+$rootScope.touser.name);
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
           var time=new Date();
           var timeid=time.getTime();
           var sendContent=$scope.send.sendMessage;
+          //发送消息
           iosocket.emit('private message', _token.userid, $rootScope.touser._id, sendContent,timeid,_token.deviceid);
           //加入发送超时模块,一分钟没收到反馈，就再次发送，一直循环，持续5次。如果网络恢复，也尝试发送
           //超过五次，标识为发送不成功，再次发送需要用户确认
+          var retryObj={
+            touser:$rootScope.touser._id,
+            loop:0,
+            startTime:timeid,
+            retryTime:0
+          };
+          $scope.retryList.push(retryObj);
+
           //将信息存入未发表成功的信息表
           document.addEventListener('deviceready', function() {
             var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
@@ -270,8 +286,10 @@ angular.module('tabControllers',[])
             });
           });
 
-          //发送广播，用户发送信息了
+          //发送广播，用户发送信息了,main页面可以接收，改变自己的视图
           $rootScope.$broadcast('SendingMessage',{userid:$rootScope.touser._id,content:sendContent});
+
+          /*
           document.addEventListener('deviceready', function() {
             var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
             //main-message列表存入一条status=sending的消息
@@ -283,7 +301,7 @@ angular.module('tabControllers',[])
             var main_status = 'sending';
             db.executeSql('insert into main_message values(?,?,?,?,?,?,?,?)', [master, relation_user, relation_user_id, main_content, timeid, main_saw, main_status,'']);
           });
-
+          */
           //实时显示
           var timenow=new Date();
           var _m={
@@ -318,6 +336,10 @@ angular.module('tabControllers',[])
             }
             $scope.messages.push(messageper);
           }
+          //将这条发送消息的视图实例，赋值到重试列表中.
+          retryObj.viewObject=_m;
+
+
           $scope.send.sendMessage = '';
           //$ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
           $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
@@ -380,9 +402,7 @@ angular.module('tabControllers',[])
           },2000);
           console.log('接到了另一个人的消息'+obj.from.name+obj.message.content);
           //铃声
-
-
-
+          $lo
         }
       })
       $rootScope.$on('ServerRecive'+userid,function(event,obj){
@@ -411,6 +431,15 @@ angular.module('tabControllers',[])
                 }
               }
             }
+
+            for(var k=0;k<$scope.retryList.length;k++){
+              if(obj.timeid===$scope.retryList[k].startTime&&obj.to===$scope.retryList[k].touser){
+                console.log('客户端收到了，不用再retry了');
+                $scope.retryList.splice(k,1);
+                break;
+              }
+            }
+
             $scope.$apply();
           });
         });
@@ -725,9 +754,38 @@ angular.module('tabControllers',[])
         $scope.getMessageFromSql(token,$rootScope.touser.userid);
       });
     }
+    $scope.retry=function(token){
+      var RETRY_TIME=2;
+      var RETRY_SECOND=30;
+      $interval(function(){
+        for(var i=0;i<$scope.retryList.length;i++){
+          var retryObj=$scope.retryList[i];
+          retryObj.retryTime++;
+          //超过n秒
+          if(retryObj.retryTime>RETRY_SECOND){
+            retryObj.loop++;
+            console.log('发送的消息超时了啊');
+            //重新发送
+            iosocket.emit('private message', token.userid, $rootScope.touser._id,retryObj.viewObject.mess ,retryObj.startTime,token.deviceid);
+            retryObj.retryTime=0;
+            retryObj.viewObject.send='retry';
+            retryObj.viewObject.retryTime=retryObj.loop;
+          }
+          //超过n次
+          if(retryObj.loop>RETRY_TIME){
+            retryObj.viewObject.send='failed';
+            //failded之后，从循环中移除
+            $scope.retryList.splice(i,1);
+          }
+        }
+      },1000)
+    }
+
+    $scope.clickRetry=function(message){
+      alert(JSON.stringify(message));
+    }
 
     //断线重连触发，触发后，执行initMessageFromServer
-
     $rootScope.$on('$cordovaNetwork:online', function(event, networkState){
       console.log('连上网了，同步服务器消息');
       $SFTools.getToken(function(token){

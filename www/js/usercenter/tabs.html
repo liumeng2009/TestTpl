@@ -79,6 +79,8 @@ navigation history that also transitions its views in and out.
                   <span>
                     {{message.mess}}<br>
                     <label style="font-size: 10px;color:green;margin-top: 10px;" ng-if="message.send==='sending'">发送中</label>
+                    <label style="font-size: 10px;color:green;margin-top: 10px;" ng-if="message.send==='retry'">第{{message.retryTime}}次重新发送</label>
+                    <label style="font-size: 10px;color:green;margin-top: 10px;" ng-if="message.send==='failed'" ng-click="clickRetry(message)" ><i class="icon ion-information-circled assertive"></i>重试发送</label>
                   </span>
                   </div>
                 </td>
