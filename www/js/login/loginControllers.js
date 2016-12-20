@@ -170,7 +170,7 @@ angular.module('loginControllers',[])
         type: 'page'
       });
       //登陆成功，调用推送服务
-      window.pushservice.startService();
+      //window.pushservice.startService();
     }
 
     $scope.doRegister=function(){

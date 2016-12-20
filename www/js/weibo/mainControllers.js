@@ -22,6 +22,8 @@ angular.module('mainControllers',['ngCordova'])
           $scope.SendingMessageListener();
           //接收服务器收到了之后，发的通知
           $scope.ServerReciverListener();
+          //接收用户发送失败的通知，改变view
+          $scope.MessageSendFailedListener();
 
           $scope.NoReadListener();
 
@@ -274,6 +276,60 @@ angular.module('mainControllers',['ngCordova'])
         },function(tx,error){
           console.log('transaction error is'+error.message);
         },function(){
+          //alert('发送失败的消息');
+          var noSendList=[];
+          //然后把发送失败的这部分加上，如果nosend里面有比现在这条信息更新的，发送失败的消息，就把这条消息放在$scope.chat里 状态是 发送失败
+          db.executeSql('select * from nosend where fromuser=\''+touser+'\' and status=1 group by touser',[],function(rs){
+            for(var i=0;i<rs.rows.length;i++){
+              var nosendObj={
+                id:rs.rows.item(i).id,
+                fromuser:rs.rows.item(i).fromuser,
+                touser:rs.rows.item(i).touser,
+                content:rs.rows.item(i).content
+              };
+              noSendList.push(nosendObj);
+            }
+            //将这个数组附加到$scope.chats上
+            for(var i=0;i<noSendList.length;i++){
+              //alert('第'+i+'条未发消息');
+              for(var j=0;j<$scope.chats.length;j++){
+                if(noSendList[i].touser===$scope.chats[j].userid){
+                  //alert(noSendList[i].touser+'和'+$scope.chats[j].userid);
+                  if(parseInt(noSendList[i].id)> parseInt($scope.chats[j].createAt)){
+                    //alert(parseInt(noSendList[i].id)+'和'+ parseInt($scope.chats[j].createAt));
+                    //alert(noSendList[i].content+ parseInt(noSendList[i].id));
+                    $scope.chats[j].content=noSendList[i].content;
+                    $scope.chats[j].type='failed';
+                    $scope.chats[j].createAt=parseInt(noSendList[i].id);
+                  }
+                  break;
+                }
+                else{
+                  if(j===$scope.chats.length-1){
+                    //如果都没有这条信息，就说明，这个人是新的，需要新增，新增就需要这个人的username和image
+                    //从db中找到这个人的信息
+                    db.executeSql('select * from userinfo where id=\''+noSendList[i].touser+'\'',[],function(rs){
+                      if(rs.rows.item(0)&&rs.rows.item(0).name&&rs.rows.item(0).image&&rs.rows.item(0).name!=''){
+                        var chat={
+                          id:'',
+                          name:rs.rows.item(0).name,
+                          userid:noSendList[i].touser,
+                          content:noSendList[i].content,
+                          createAt:parseInt(noSendList[i].id),
+                          new:0,
+                          type:'failed'
+                        };
+                        $scope.chats.push(chat);
+                      };
+                    });
+                  }
+                }
+              }
+
+            }
+          },function(error){
+
+          });
           $scope.$apply();
           console.log('transaction success');
         });
@@ -301,7 +357,26 @@ angular.module('mainControllers',['ngCordova'])
           if($scope.chats[i].userid===userid){
             $scope.chats[i].type='sending';
             $scope.chats[i].content=content;
+            $scope.chats[i].createAt=obj.timeid;
             break;
+          }
+          else{
+            if(i===$scope.chats.length-1){
+              //说明和这个人还没有联系呢
+              var chatObj={
+                id:'',
+                name:obj.username,
+                userid:obj.userid,
+                content:obj.content,
+                createAt:obj.timeid,
+                new:0,
+                type:'sending'
+              }
+              //alert(JSON.stringify(chatObj)+JSON.stringify(chatObj2));
+              $scope.chats.push(chatObj);
+              //$scope.chats.push(chatObj2);
+              //$scope.$apply();
+            }
           }
         }
       });
@@ -325,7 +400,6 @@ angular.module('mainControllers',['ngCordova'])
           db.transaction(function(tx){
             var createAt=new Date(obj.message.meta.createAt);
             tx.executeSql('update main_message set content=?,createAt=?,saw=0 where master=? and relation_user_id=? and status=1',[obj.message.content,createAt.getTime(),obj.from,obj.to]);
-            tx.executeSql('delete from main_message where master=? and relation_user_id=? and status=\'sending\' and createAt=?',[obj.from,obj.to,obj.timeid]);
           },function(error){
             //alert('main事务执行失败'+error);
           },function(){
@@ -336,6 +410,21 @@ angular.module('mainControllers',['ngCordova'])
 
       });
     }
+    //消息发送失败的消息
+    $scope.MessageSendFailedListener=function(){
+      $rootScope.$on('MessageFailed',function(event,obj){
+        alert('接收到了信息失败的消息'+obj.userid);
+        for(var i=0;i<$scope.chats.length;i++){
+          //alert($scope.chats[i].userid+'   '+obj.userid+'         '+$scope.chats.createAt+'     '+obj.timeid);
+          if($scope.chats[i].userid===obj.userid&&$scope.chats[i].createAt===obj.timeid){
+            $scope.chats[i].type='failed';
+            break;
+          }
+        }
+      })
+    }
+
+
 
     $scope.NoReadListener=function(){
       $rootScope.$on('ReceiveNoRead',function(event,obj){

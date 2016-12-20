@@ -36,6 +36,7 @@
           </div>
           <p class="content">
             <label style="font-size: 10px;line-height: 20px;color:green" ng-if="chat.type==='sending'">[发送中]</label>
+            <label style="font-size: 10px;line-height: 20px;color:red" ng-if="chat.type==='failed'"><i class="icon ion-information-circled assertive"></i></label>
             {{chat.content}}
           </p>
         </div>

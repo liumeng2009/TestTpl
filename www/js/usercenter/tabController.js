@@ -26,9 +26,6 @@ angular.module('tabControllers',[])
         }
         $scope.retry(token);
       })
-
-
-
     });
     $ionicModal.fromTemplateUrl('templates/modal_add.html', {
       scope: $scope,
@@ -80,7 +77,11 @@ angular.module('tabControllers',[])
             _id:_token.userid,
             image:_token.image
           }
-          $scope.getMessageFromSql(_token,userid);
+
+          $timeout(function(){
+            $scope.getMessageFromSql(_token,userid);
+          },0);
+
 
           $scope.setSaw(_token.userid,userid);
 
@@ -114,6 +115,7 @@ angular.module('tabControllers',[])
       show:false
     }
     $scope.keyBoardStatus=false;
+    //从数据库取得chat信息
     $scope.getMessageFromSql=function(_token,touser){
       //alert('取得最近三天的聊天记录'+_token.userid+_token.token);
       document.addEventListener('deviceready', function() {
@@ -138,6 +140,9 @@ angular.module('tabControllers',[])
         db.transaction(function(tx){
             tx.executeSql(sqlStr,[],function(tx,rs){
               for(var i=0;i<rs.rows.length;i++){
+                if(i>5){
+                  break;
+                }
                 //alert('第'+i+'条信息'+rs.rows.item(i).content);
                 //按照时间段进行分组
                 if($scope.messages.length>0){
@@ -154,7 +159,7 @@ angular.module('tabControllers',[])
                         username:_token.name,
                         mess:rs.rows.item(i).content,
                         createAt:rs.rows.item(i).createAt,
-                        send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                        send:rs.rows.item(i).status.toString()==='1'?'failed':rs.rows.item(i).status.toString()
                       }
                     }
                     else{
@@ -165,7 +170,7 @@ angular.module('tabControllers',[])
                         userid:touser._id,
                         mess:rs.rows.item(i).content,
                         createAt:rs.rows.item(i).createAt,
-                        send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                        send:rs.rows.item(i).status.toString()==='1'?'failed':rs.rows.item(i).status.toString()
                       }
                     }
                     var chatlist=[];
@@ -187,7 +192,7 @@ angular.module('tabControllers',[])
                         userid:_token.userid,
                         mess:rs.rows.item(i).content,
                         createAt:rs.rows.item(i).createAt,
-                        send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                        send:rs.rows.item(i).status.toString()==='1'?'failed':rs.rows.item(i).status.toString()
                       }
                     }
                     else{
@@ -198,14 +203,13 @@ angular.module('tabControllers',[])
                         userid:touser._id,
                         mess:rs.rows.item(i).content,
                         createAt:rs.rows.item(i).createAt,
-                        send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                        send:rs.rows.item(i).status.toString()==='1'?'failed':rs.rows.item(i).status.toString()
                       }
                     }
                     $scope.messages[$scope.messages.length-1].chatlist.push(_m);
                   }
                 }
                 else{
-                  //alert('走这里了');
                   var _m;
                   if(_token.userid===rs.rows.item(0).fromuser){
                     _m={
@@ -252,8 +256,6 @@ angular.module('tabControllers',[])
       //send之后，加入retryList
       //各属性描述：   发给谁的  循环次数  用户点击发送的时间  重试倒计时  在视图上的对象实例 一分钟重试一次，如果收到了服务器的回应，说明收到了，就从数组内删除
       // retry的结构是 .touser   .loop     .startTime          .retryTime  viewObject
-
-
       console.log('和我聊天的人是：'+$rootScope.touser._id+$rootScope.touser.name);
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
@@ -278,16 +280,18 @@ angular.module('tabControllers',[])
             // status=1 默认 status=0的时候，说明这条数据发送成功了 id列就是时间
             db.executeSql('create table if not exists nosend(id,fromuser,touser,content,status)');
             db.transaction(function(tx){
+              alert('我发信息给'+$rootScope.touser._id);
               tx.executeSql('insert into nosend values(?,?,?,?,?)',[timeid,_token.userid,$rootScope.touser._id,sendContent,1]);
             },function(tx,error){
-
+                console.log(tx+error);
             },function(){
 
             });
           });
 
           //发送广播，用户发送信息了,main页面可以接收，改变自己的视图
-          $rootScope.$broadcast('SendingMessage',{userid:$rootScope.touser._id,content:sendContent});
+          //alert('发送消息的通知'+sendContent);
+          $rootScope.$broadcast('SendingMessage',{userid:$rootScope.touser._id,content:sendContent,timeid:timeid,username:$rootScope.touser.name,image:$rootScope.touser.image});
 
           /*
           document.addEventListener('deviceready', function() {
@@ -402,7 +406,7 @@ angular.module('tabControllers',[])
           },2000);
           console.log('接到了另一个人的消息'+obj.from.name+obj.message.content);
           //铃声
-          $lo
+
         }
       })
       $rootScope.$on('ServerRecive'+userid,function(event,obj){
@@ -748,25 +752,29 @@ angular.module('tabControllers',[])
         })
       });
     }
+
     $scope.NoReadListener=function(token){
       $rootScope.$on('SendingMessage',function(event,obj){
         console.log('chat页面收到了服务器同步的信息，同时开始同步chat页面。');
         $scope.getMessageFromSql(token,$rootScope.touser.userid);
       });
     }
+    //将发送信息的这个对象加入重试机制，重试n次还得不到回应，就说明发送失败
     $scope.retry=function(token){
-      var RETRY_TIME=2;
-      var RETRY_SECOND=30;
+      var RETRY_TIME=5;
+      var RETRY_SECOND=5;
       $interval(function(){
+        console.log($scope.retryList.length);
         for(var i=0;i<$scope.retryList.length;i++){
           var retryObj=$scope.retryList[i];
           retryObj.retryTime++;
           //超过n秒
           if(retryObj.retryTime>RETRY_SECOND){
             retryObj.loop++;
-            console.log('发送的消息超时了啊');
+            console.log('发送的消息超时了啊'+JSON.stringify(retryObj));
+
             //重新发送
-            iosocket.emit('private message', token.userid, $rootScope.touser._id,retryObj.viewObject.mess ,retryObj.startTime,token.deviceid);
+            iosocket.emit('private message', token.userid, retryObj.touser,retryObj.viewObject.mess ,retryObj.startTime,token.deviceid);
             retryObj.retryTime=0;
             retryObj.viewObject.send='retry';
             retryObj.viewObject.retryTime=retryObj.loop;
@@ -774,6 +782,9 @@ angular.module('tabControllers',[])
           //超过n次
           if(retryObj.loop>RETRY_TIME){
             retryObj.viewObject.send='failed';
+            //发送发送失败通知，用来告诉main页面
+            alert('发送信息失败的消息'+$rootScope.touser._id);
+            $rootScope.$broadcast('MessageFailed',{userid:retryObj.touser,timeid:retryObj.startTime});
             //failded之后，从循环中移除
             $scope.retryList.splice(i,1);
           }
