@@ -9,7 +9,7 @@ angular.module('loginServices',[])
         return $http({
           url:url,
           method:'GET'
-        })
+        });
       },
       reg:function(requestParams){
         var url=config.basePath+'signup'

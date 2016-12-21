@@ -30,7 +30,7 @@
         <div class="right">
           <div class="name">
             {{chat.name}}
-            <div class="date">
+            <div class="date" ng-if="chat.createAt!=0">
               {{chat.createAt | mydate}}
             </div>
           </div>

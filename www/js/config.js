@@ -7,5 +7,8 @@ config = {
   pagination:{
     pageSize:10,
     currentPage:1
+  },
+  userPrompt:{
+    ajaxError:'服务器相应超时'
   }
 };

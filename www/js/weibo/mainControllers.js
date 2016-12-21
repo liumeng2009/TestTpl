@@ -13,20 +13,11 @@ angular.module('mainControllers',['ngCordova'])
       $scope.LoadingServer=false;
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
+          //初始化main页面的欢迎信息
           $scope.initChat(_token);
-          //从sql找到列表数据
+          //从sql找到列表数据，让用户离线的时候也可以浏览消息
           $scope.initMessageFromSql(_token.userid);
-          //接收“用户看过了”这条消息
-          $scope.MessageSawListener();
-          //接收“用户向这个人发信息了”这条消息
-          $scope.SendingMessageListener();
-          //接收服务器收到了之后，发的通知
-          $scope.ServerReciverListener();
-          //接收用户发送失败的通知，改变view
-          $scope.MessageSendFailedListener();
-
-          $scope.NoReadListener();
-
+          //确认用户是否成功登陆
           $usercenterData.usercenter({token:_token.token})
             .success(function(data){
               if(data.success===0){
@@ -34,8 +25,8 @@ angular.module('mainControllers',['ngCordova'])
                 $scope.showErrorMesPopup(data.msg);
               }
               else{
-                //服务器上的没有收到的消息，接收一下
-
+                //初始化socket，登录到聊天服务器
+                $scope.initSocket(_token);
                 //获取socket信息，发送angularjs通知
                 iosocket.on('message',function(obj){
                   console.log('page接收到了socket的消息');
@@ -43,7 +34,7 @@ angular.module('mainControllers',['ngCordova'])
                 });
                 //服务器说，你发的消息我收到了
                 iosocket.on('reciveMessage',function(obj){
-                  //alert('发送广播：服务器收到了。广播的名称为serverRecive'+obj.to);
+                  alert('发送广播：服务器收到了。广播的名称为serverRecive'+obj.to);
                   $rootScope.$broadcast('ServerRecive'+obj.to,obj);
                   $rootScope.$broadcast('ServerRecive',obj);
                   //更新main列表
@@ -53,17 +44,27 @@ angular.module('mainControllers',['ngCordova'])
                       var timee=new Date(obj.message.meta.createAt);
                       $scope.chats[i].createAt=timee.getTime();
                       $scope.chats[i].new=0;
-                      break;
                       $scope.$apply();
+                      break;
                     }
                   }
                 });
                 //收到了消息之后的处理
                 $scope.receiveMessage(_token);
+                //接收“用户看过了”这条消息
+                $scope.MessageSawListener();
+                //接收“用户向这个人发信息了”这条消息
+                $scope.SendingMessageListener();
+                //接收服务器收到了之后，发的通知
+                $scope.ServerReciverListener();
+                //接收用户发送失败的通知，改变view
+                $scope.MessageSendFailedListener();
+                //同步服务器消息成功，改变view
+                $scope.NoReadListener();
               }
             })
             .error(function(){
-              $scope.showErrorMesPopup('网络连接错误');
+              $SFTools.myToast(config.userPrompt.ajaxError);
             });
         }
         else{
@@ -73,10 +74,29 @@ angular.module('mainControllers',['ngCordova'])
     });
 
     $scope.$on('$ionicView.afterEnter',function(){
-
+      $ionicHistory.clearHistory();
+      $ionicHistory.clearCache();
     });
 
     //弹出modal
+
+    $scope.initSocket=function(_token){
+      alert('初始化socket');
+      iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
+      iosocket.on('connect', function () {
+        console.log('连接了，不知道是重新连还是直接连，username是' + _token.name + ',_id是' + _token.userid);
+        if (_token.name != '' && _token.userid != '') {
+          iosocket.emit('login', {
+            name: _token.name,
+            _id: _token.userid,
+            type: 'page'
+          });
+        }
+      });
+      iosocket.on('reconnect',function(){
+        alert('重新连接了');
+      })
+    }
 
     $scope.showErrorMesPopup = function(title,cb) {
       $SFTools.myToast(title);
@@ -235,7 +255,7 @@ angular.module('mainControllers',['ngCordova'])
         name:'晓园团队',
         userid:0,
         content:'欢迎加入晓园IM',
-        createAt:_token.createAt,
+        createAt:0,
         new:0
       };
       $scope.chats.push(chatXiaoYuan);
@@ -460,7 +480,7 @@ angular.module('mainControllers',['ngCordova'])
               new:mainArray[i].saw,
               type:mainArray[i].status
             };
-            $scope.chats.push(chatObj);
+            $scope.chats.unshift(chatObj);
           }
         }
         else{
@@ -497,14 +517,13 @@ angular.module('mainControllers',['ngCordova'])
                     new:mainArray[i].saw,
                     type:mainArray[i].status
                   };
-                  $scope.chats.push(chatObj);
+                  $scope.chats.unshift(chatObj);
                   break;
                 }
               }
             }
           }
         }
-
         console.log(JSON.stringify($scope.chats))
         $scope.$apply();
 

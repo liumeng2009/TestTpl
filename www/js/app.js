@@ -20,6 +20,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
   TIME_SPACING=5;
   iosocket='';
   isSync=false;
+  /*
   $SFTools.getToken(function(_token){
     if(_token&&_token.userid&&_token!='') {
       iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
@@ -33,12 +34,17 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
           });
         }
       });
+      iosocket.on('reconnect',function(){
+        alert('重新连接了');
+      })
+
     }
     else{
       $SFTools.myToast('请您先登陆');
       $state.go('login');
     }
   });
+  */
 })
 
 .config(function($stateProvider, $urlRouterProvider,$ionicConfigProvider,$sceDelegateProvider,$ionicNativeTransitionsProvider) {
@@ -71,6 +77,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
     // Allow same origin resource loads.
     'self',
     'http://127.0.0.1:3000',
+    'http://liumeng.iego.cn',
     // Allow loading from our assets domain.  Notice the difference between * and **.
     'http://media.w3.org/**']);
   $ionicConfigProvider.views.transition('ios');

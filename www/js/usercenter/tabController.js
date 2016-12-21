@@ -6,6 +6,8 @@ angular.module('tabControllers',[])
     $rootScope.isOnline=true;
     $scope.retryList=[];
     $scope.$on('$ionicView.afterEnter',function(){
+      alert('tab after enter');
+      //获取app加载的起始页面，用于点击通知打开app的方式
       $SFTools.getStartPage(function(value){
         //alert('从shared取出来的startPage值是'+value);
       });
@@ -18,7 +20,9 @@ angular.module('tabControllers',[])
           $rootScope.isOnline=false;
         }
       });
+      //获取token
       $SFTools.getToken(function(token){
+        alert(JSON.stringify(token))
         if(token&&token.userid&&token!=''){
           if(!isSync){
             $scope.initMessageFromServer(token);
@@ -78,9 +82,7 @@ angular.module('tabControllers',[])
             image:_token.image
           }
 
-          $timeout(function(){
-            $scope.getMessageFromSql(_token,userid);
-          },0);
+          $scope.getMessageFromSql(_token,userid);
 
 
           $scope.setSaw(_token.userid,userid);
@@ -140,9 +142,6 @@ angular.module('tabControllers',[])
         db.transaction(function(tx){
             tx.executeSql(sqlStr,[],function(tx,rs){
               for(var i=0;i<rs.rows.length;i++){
-                if(i>5){
-                  break;
-                }
                 //alert('第'+i+'条信息'+rs.rows.item(i).content);
                 //按照时间段进行分组
                 if($scope.messages.length>0){
@@ -256,7 +255,7 @@ angular.module('tabControllers',[])
       //send之后，加入retryList
       //各属性描述：   发给谁的  循环次数  用户点击发送的时间  重试倒计时  在视图上的对象实例 一分钟重试一次，如果收到了服务器的回应，说明收到了，就从数组内删除
       // retry的结构是 .touser   .loop     .startTime          .retryTime  viewObject
-      console.log('和我聊天的人是：'+$rootScope.touser._id+$rootScope.touser.name);
+      //console.log('和我聊天的人是：'+$rootScope.touser._id+$rootScope.touser.name);
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
           var time=new Date();
@@ -280,7 +279,7 @@ angular.module('tabControllers',[])
             // status=1 默认 status=0的时候，说明这条数据发送成功了 id列就是时间
             db.executeSql('create table if not exists nosend(id,fromuser,touser,content,status)');
             db.transaction(function(tx){
-              alert('我发信息给'+$rootScope.touser._id);
+              //alert('我发信息给'+$rootScope.touser._id);
               tx.executeSql('insert into nosend values(?,?,?,?,?)',[timeid,_token.userid,$rootScope.touser._id,sendContent,1]);
             },function(tx,error){
                 console.log(tx+error);
@@ -410,7 +409,7 @@ angular.module('tabControllers',[])
         }
       })
       $rootScope.$on('ServerRecive'+userid,function(event,obj){
-        // alert('接到了angularjs的广播，广播名称是'+'ServerRecive'+$stateParams.userid+'服务器说，我收到了，你做自己的处理吧'+obj.timeid+obj.from+obj.to+obj.message.content+'事件名称是');
+        //alert('接到了angularjs的广播，广播名称是'+'ServerRecive 服务器说，我收到了，你做自己的处理吧'+obj.timeid+obj.from+obj.to+obj.message.content+'事件名称是');
         //服务器收到了，把nosend表的status置0，然后将信息存入chat表
         document.addEventListener('deviceready', function() {
           var db = null;
@@ -503,7 +502,7 @@ angular.module('tabControllers',[])
             }
             //服务器上存的7天内的，和这个客户端不一致的所有消息
             $mainData.not_read_list({token:token.token}).success(function(data){
-              $SFTools.myToast('从服务器同步信息的条数是：'+data.chats.length);
+              console.log('从服务器同步信息的条数是：'+JSON.stringify(data));
               //获取信息之后，将同步的信息，存入sqlite
               var insertSqls=[];
               var insertUser=[];
@@ -764,7 +763,6 @@ angular.module('tabControllers',[])
       var RETRY_TIME=5;
       var RETRY_SECOND=5;
       $interval(function(){
-        console.log($scope.retryList.length);
         for(var i=0;i<$scope.retryList.length;i++){
           var retryObj=$scope.retryList[i];
           retryObj.retryTime++;

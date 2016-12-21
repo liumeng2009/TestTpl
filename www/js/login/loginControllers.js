@@ -52,7 +52,7 @@ angular.module('loginControllers',[])
         noClick:true
       };
       $loginData.login(this.user).success(function(data){
-        console.log(JSON.stringify(data));
+        console.log('请求登录信息是：'+JSON.stringify(data));
         if (data.success !== 0) {
           //成功，把token存入Sql
           document.addEventListener('deviceready', function () {
@@ -131,6 +131,7 @@ angular.module('loginControllers',[])
     //登陆成功，取得token值之后的操作
     $scope.loginNext=function(username,userid,createDeviceId){
       //同步deivceid,当用户安装完app第一次登录的时候，也是第一次插入users表，这时候同步设备id
+      console.log('next');
       if(createDeviceId) {
         var db = null;
         db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
@@ -162,13 +163,6 @@ angular.module('loginControllers',[])
         //登录成功之后，跳转
         $state.go('tab.main');
       }
-      //如果没有自动登录，经过login页面的话，需要在这里连接socket
-      iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
-      iosocket.emit('login', {
-        name:username,
-        _id: userid,
-        type: 'page'
-      });
       //登陆成功，调用推送服务
       //window.pushservice.startService();
     }
