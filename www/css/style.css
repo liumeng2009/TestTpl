@@ -295,16 +295,17 @@
 }
 #mainlist .item .new {
   position: absolute;
-  width: 14px;
-  height: 14px;
-  border-radius: 100%;
+  min-width: 10px;
+  height: 18px;
+  border-radius: 10px;
+  padding: 1px 6px;
   color: #fff;
-  background-color: #ff4d4d;
+  background-color: #444;
   text-align: center;
-  left: 51px;
-  top: 6px;
+  right: 10px;
+  bottom: 13px;
   font-size: 12px;
-  line-height: 14px;
+  line-height: 16px;
 }
 #mainlist .item .new-small {
   position: absolute;
@@ -312,7 +313,7 @@
   height: 10px;
   border-radius: 100%;
   color: #fff;
-  background-color: #ff4d4d;
+  background-color: #444;
   text-align: center;
   left: 53px;
   top: 8px;
@@ -342,6 +343,7 @@
   margin-left: 50px;
   font-size: 14px;
   color: #8f8f8f;
+  padding-right: 50px;
 }
 .chat-avatar {
   width: 12px;
@@ -379,4 +381,12 @@
   background-color: transparent;
   line-height: 42px;
   color: #33cd5f;
+}
+.spinner {
+  position: relative;
+}
+.spinner svg {
+  position: absolute;
+  top: 50%;
+  margin-top: -14px;
 }

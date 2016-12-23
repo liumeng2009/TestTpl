@@ -165,7 +165,6 @@ angular.module('childrenControllers',[])
     $scope.openStudentSelectModal=function(studentid){
       $scope.modal_Student_Select.show();
     }
-    $scope.openChat
 
     $scope.setSchoolNow=function(){
       $scope.orgnow.sname=this.school.name;

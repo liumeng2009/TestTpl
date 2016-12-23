@@ -119,6 +119,10 @@ angular.module('loginControllers',[])
           });
         } else {
           $SFTools.myToast(data.success + data.msg);
+          $scope.loginPage={
+            action:'登录',
+            noClick:false
+          };
         }
       }).error(function(data,status,headers,config){
         $scope.loginPage={

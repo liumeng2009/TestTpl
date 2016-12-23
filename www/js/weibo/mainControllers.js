@@ -4,6 +4,7 @@
 angular.module('mainControllers',['ngCordova'])
   .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform','$interval','$cordovaDevice',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform,$interval,$cordovaDevice){
     $scope.$on('$ionicView.loaded',function(){
+      alert('main loaded');
       //app默认进入页面
       var db = null;
       var username='';
@@ -22,33 +23,13 @@ angular.module('mainControllers',['ngCordova'])
             .success(function(data){
               if(data.success===0){
                 $state.go('login');
-                $scope.showErrorMesPopup(data.msg);
+                $SFTools.myToast(data.msg);
               }
               else{
+                //接收离线信息
+                $scope.initMessageFromServer(_token)
                 //初始化socket，登录到聊天服务器
                 $scope.initSocket(_token);
-                //获取socket信息，发送angularjs通知
-                iosocket.on('message',function(obj){
-                  console.log('page接收到了socket的消息');
-                  $rootScope.$broadcast('ReciveMessage',obj);
-                });
-                //服务器说，你发的消息我收到了
-                iosocket.on('reciveMessage',function(obj){
-                  alert('发送广播：服务器收到了。广播的名称为serverRecive'+obj.to);
-                  $rootScope.$broadcast('ServerRecive'+obj.to,obj);
-                  $rootScope.$broadcast('ServerRecive',obj);
-                  //更新main列表
-                  for(var i=0;i<$scope.chats.length;i++){
-                    if($scope.chats[i].userid===obj.to){
-                      $scope.chats[i].content=obj.message.content;
-                      var timee=new Date(obj.message.meta.createAt);
-                      $scope.chats[i].createAt=timee.getTime();
-                      $scope.chats[i].new=0;
-                      $scope.$apply();
-                      break;
-                    }
-                  }
-                });
                 //收到了消息之后的处理
                 $scope.receiveMessage(_token);
                 //接收“用户看过了”这条消息
@@ -61,6 +42,8 @@ angular.module('mainControllers',['ngCordova'])
                 $scope.MessageSendFailedListener();
                 //同步服务器消息成功，改变view
                 $scope.NoReadListener();
+                //消息发送失败的重试机制
+                $scope.retry(_token);
               }
             })
             .error(function(){
@@ -78,7 +61,12 @@ angular.module('mainControllers',['ngCordova'])
       $ionicHistory.clearCache();
     });
 
-    //弹出modal
+    $scope.chatWith=function(id,name){
+      $state.go('chat',{
+        userid:id,
+        username:name
+      });
+    }
 
     $scope.initSocket=function(_token){
       alert('初始化socket');
@@ -93,14 +81,325 @@ angular.module('mainControllers',['ngCordova'])
           });
         }
       });
+      //获取socket信息，发送angularjs通知
+      iosocket.on('message',function(obj){
+        console.log('page接收到了socket的消息');
+        $rootScope.$broadcast('ReciveMessage',obj);
+      });
+      //服务器说，你发的消息我收到了
+      iosocket.on('reciveMessage',function(obj){
+        alert('发送广播：服务器收到了。广播的名称为serverRecive'+obj.to);
+        $rootScope.$broadcast('ServerRecive'+obj.to,obj);
+        $rootScope.$broadcast('ServerRecive',obj);
+        //更新main列表
+        for(var i=0;i<$scope.chats.length;i++){
+          if($scope.chats[i].userid===obj.to){
+            $scope.chats[i].content=obj.message.content;
+            var timee=new Date(obj.message.meta.createAt);
+            $scope.chats[i].createAt=timee.getTime();
+            $scope.chats[i].new=0;
+            $scope.$apply();
+            break;
+          }
+        }
+      });
       iosocket.on('reconnect',function(){
-        alert('重新连接了');
-      })
+        alert('重新连接事件触发，发出通知，tab页面，可以用这个通知来加载离线消息。');
+        $rootScope.$broadcast('socketReconnect',{});
+      });
     }
 
-    $scope.showErrorMesPopup = function(title,cb) {
-      $SFTools.myToast(title);
-    };
+    //从服务器同步离线消息，并发出全局通知
+    $scope.initMessageFromServer=function(token){
+      $scope.LoadingServer=true;
+      document.addEventListener('deviceready', function() {
+        var db = null;
+        db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+        //获得当前main界面的数据
+        db.executeSql('select * from main_message',[],function(rs){
+          var mainArray=[];
+          var userInfoArray=[];
+          for(var o=0;o<rs.rows.length;o++){
+            var mainObj={
+              master:rs.rows.item(o).master,
+              relation_user:rs.rows.item(o).relation_user,
+              relation_user_id:rs.rows.item(o).relation_user_id,
+              content:rs.rows.item(o).content,
+              createAt:rs.rows.item(o).createAt,
+              saw:rs.rows.item(o).saw,
+              status:rs.rows.item(o).status,
+              relation_chat_id:rs.rows.item(o).relation_chat_id
+            }
+            mainArray.push(mainArray);
+          }
+          //获得当前userinfo表的信息
+          db.executeSql('select * from userinfo',[],function(rsUserInfo){
+            for(var oo=0;oo<rsUserInfo.rows.length;oo++){
+              var userInfoObj={
+                id:rsUserInfo.rows.item(oo).id,
+                name:rsUserInfo.rows.item(oo).name,
+                image:rsUserInfo.rows.item(oo).image,
+                showInMain:rsUserInfo.rows.item(oo).showInMain
+              }
+              userInfoArray.push(userInfoObj);
+            }
+            //服务器上存的7天内的，和这个客户端不一致的所有消息
+            $mainData.not_read_list({token:token.token}).success(function(data){
+              console.log('从服务器同步信息的条数是：'+JSON.stringify(data));
+              //获取信息之后，将同步的信息，存入sqlite
+              var insertSqls=[];
+              var insertUser=[];
+              var mainServer=[];
+
+              var chatResult=[];
+
+              for(var i=0;i<data.chats.length;i++){
+                //首先看和user发生关系的这个人的信息，是否在userinfo表中存在，存在不修改，不存在新增
+                var fromuser=data.chats[i].from;
+                var touser=data.chats[i].to;
+                //同步userinfo表
+                var relation_user={};
+                if(token.userid===fromuser._id.toString()) {
+                  relation_user={
+                    name:touser.name,
+                    userid:touser._id,
+                    image:touser.image,
+                    action:'to'
+                  }
+                }
+                else{
+                  relation_user={
+                    name:fromuser.name,
+                    userid:fromuser._id,
+                    image:fromuser.image,
+                    action:'from'
+                  }
+                }
+                console.log('这条有关联系人的信息是：'+relation_user.name+'他的行为是'+relation_user.action);
+                var existUser=false;
+
+                if(userInfoArray.length>0){
+                  for(var ui=0;ui<userInfoArray.length;ui++){
+                    console.log('循环'+relation_user.userid+'和'+userInfoArray[ui].id);
+                    if(relation_user.userid===userInfoArray[ui].id){
+                      //说明存在，不管
+                      break;
+                    }
+                    else{
+                      if(ui===userInfoArray.length-1){
+                        //说明不存在，插入
+                        console.log(relation_user.name+'不存在插入1');
+                        var userInfoArrayObj={
+                          id:relation_user.userid,
+                          name:relation_user.name,
+                          image:relation_user.image,
+                          showInMain:1
+                        }
+                        userInfoArray.push(userInfoArrayObj);
+                        insertUser.push('insert into userinfo values(\''+userInfoArrayObj.id+'\',\''+userInfoArrayObj.name+'\',\''+userInfoArrayObj.image+'\',1)');
+                        break;
+                      }
+                    }
+                  }
+                }
+                else{
+                  console.log(relation_user.name+'不存在插入2');
+                  var userInfoArrayObj={
+                    id:relation_user.userid,
+                    name:relation_user.name,
+                    image:relation_user.image,
+                    showInMain:1
+                  }
+                  userInfoArray.push(userInfoArrayObj);
+                  insertUser.push('insert into userinfo values(\''+userInfoArrayObj.id+'\',\''+userInfoArrayObj.name+'\',\''+userInfoArrayObj.image+'\',1)');
+                }
+
+
+                //同步chat
+                var createDate=new Date(data.chats[i].meta.createAt);
+                var chatObj={
+                  id:data.chats[i]._id,
+                  fromuser:fromuser._id.toString(),
+                  touser:touser._id.toString(),
+                  content:data.chats[i].content,
+                  createAt:createDate.getTime(),
+                  saw:0
+                }
+                chatResult.push(chatObj);
+
+                console.log('服务器同步过来的消息，客户端没有，进行插入操作');
+                insertSqls.push('insert into chat values(\''+chatObj.id+'\',\''+chatObj.fromuser+'\',\''+chatObj.touser+'\',\''+chatObj.content+'\','+chatObj.createAt+',0)')
+
+
+                //同步main_message
+                //得到的服务器消息，需要和sqlite中的main_message作比较 mainArray是当前数据库中的数据
+                //把服务器传输过来的数据，做main_message筛选,放在mainServer里面
+                console.log('mainServer第一次插入的时候数据是：'+JSON.stringify(mainServer));
+                if(mainServer.length===0){
+                  var mainServerObj={
+                    master:token.userid,
+                    relation_user:relation_user.name,
+                    relation_user_id:relation_user.userid,
+                    content:data.chats[i].content,
+                    createAt:createDate.getTime(),
+                    saw:relation_user.action==='to'?0:((data.chats[i].saw==="0"||data.chats[i].saw==="1"||data.chats[i].saw==="")?1:0),
+                    status:1,
+                    relation_chat_id:relation_user.action==="to"?"":data.chats[i]._id.toString()
+                  }
+                  mainServer.push(mainServerObj);
+                }
+                else{
+                  for(var k=0;k<mainServer.length;k++){
+                    if(mainServer[k].relation_user_id===relation_user.userid){
+                      console.log('Mainserver中的第'+k+'个人和这条chat的人是相同的'+mainServer[k].relation_user_id+mainServer[k].relation_user);
+                      //比较他们的createAt
+                      if(mainServer[k].createAt> createDate.getTime()){
+                        //说明这条信息和之前那个相比，不新，就不需要更新了
+                      }
+                      else{
+                        //更加新的一条信息，需要更新mainServer
+                        mainServer[k].content=data.chats[i].content;
+                        mainServer[k].createAt=createDate.getTime();
+                        if(relation_user.action==='to'){
+                          mainServer[k].saw=0;
+                        }
+                        else{
+                          mainServer[k].saw=(data.chats[i].saw==="0"||data.chats[i].saw==="1"||data.chats[i].saw==="")?mainServer[k].saw+1:mainServer[k].saw;
+                        }
+                        mainServer[k].relation_chat_id=relation_user.action==="to"?"":data.chats[i]._id.toString();
+                      }
+                      break;
+                    }
+                    else{
+                      //说明是和另一个人的联系
+                      if(k===mainServer.length-1){
+                        //说明是新的，insert进mainServer
+                        var mainServerObj={
+                          master:token.userid,
+                          relation_user:relation_user.name,
+                          relation_user_id:relation_user.userid,
+                          content:data.chats[i].content,
+                          createAt:createDate.getTime(),
+                          saw:relation_user.action==='to'?0:((data.chats[i].saw==="0"||data.chats[i].saw==="1"||data.chats[i].saw==="")?1:0),
+                          status:1,
+                          relation_chat_id:relation_user.action==="to"?"":data.chats[i]._id.toString()
+                        }
+                        mainServer.push(mainServerObj);
+                      }
+                      else{
+                        //继续循环
+                      }
+                    }
+                  }
+                }
+              }
+
+              //循环完毕，把mainServer[]和mainArray[]整合，确定这一系列的sql
+              //mainResult这个数组，用来给其他页面，作为广播的一个参数
+              var mainResult=[];
+              if(mainArray.length===0){
+                //相当于main_message对象是空的，把服务器的main直接放进去就可以了
+                for(var ss=0;ss<mainServer.length;ss++){
+                  insertSqls.push('insert into main_message values(\''+mainServer[ss].master+'\',\''+mainServer[ss].relation_user+'\',\''+mainServer[ss].relation_user_id+'\',\''+mainServer[ss].content+'\','+mainServer[ss].createAt+','+mainServer[ss].saw+','+mainServer[ss].status+',\''+mainServer[ss].relation_chat_id+'\')');
+                  mainResult.push(mainServer[ss]);
+                }
+              }
+              else{
+                for(var cc=0;cc<mainServer.length;cc++){
+                  for(var tt=0;tt<mainArray.length;tt++){
+                    if(mainArray[tt].relation_user_id===mainServer[cc].relation_user_id){
+                      if(mainArray[tt].createAt>mainServer[cc].createAt){
+                        //说明这条信息不新，不用修改了
+                      }
+                      else{
+                        //说明服务器过来的这个消息是新的，修改之
+                        var contentUpdate=mainServer[cc].content;
+                        var createAtUpdate=mainServer[cc].createAt;
+                        var sawUpdate=0;
+                        if(mainServer[cc].relation_chat_id===""){
+
+                        }
+                        else{
+                          sawUpdate=mainArray[tt].saw+1;
+                        }
+                        var relationChatIdUpdate=mainServer[cc].relation_chat_id;
+                        var masterUpdate=mainServer[cc].master;
+                        var relationUserId=mainServer[cc].relation_user_id;
+                        insertSqls.push('update main_message set content=\''+contentUpdate+'\',createAt='+createAtUpdate+',saw='+sawUpdate+',relation_chat_id=\''+relationChatIdUpdate+'\' where master=\''+masterUpdate+'\' and relation_user_id=\''+relationChatIdUpdate+'\' and status=1 ');
+                        var mainResultObj={
+                          master:masterUpdate,
+                          relation_user:mainServer[cc].relation_user,
+                          relation_user_id:relationUserId,
+                          content:contentUpdate,
+                          createAt:createAtUpdate,
+                          saw:sawUpdate,
+                          status:1,
+                          relation_chat_id:relationChatIdUpdate
+                        }
+                        mainResult.push(mainResultObj);
+                      }
+                      break;
+                    }
+                    else{
+                      //循环到最后一个
+                      if(tt===mainArray.length-1){
+                        //说明就是最后的一个了,需要insert
+                        insertSqls.push('insert into main_message values(\''+mainServer[cc].master+'\',\''+mainServer[cc].relation_user+'\',\''+mainServer[cc].relation_user_id+'\',\''+mainServer[cc].content+'\','+mainServer[cc].createAt+','+mainServer[cc].saw+','+mainServer[cc].status+',\''+mainServer[cc].relation_chat_id+'\')');
+                        var mainResultObj={
+                          master:mainServer[cc].master,
+                          relation_user:mainServer[cc].relation_user,
+                          relation_user_id:mainServer[cc].relation_user_id,
+                          content:mainServer[cc].content,
+                          createAt:mainServer[cc].createAt,
+                          saw:mainServer[cc].saw,
+                          status:1,
+                          relation_chat_id:mainServer[cc].relation_chat_id
+                        }
+                        mainResult.push(mainResultObj);
+                      }
+                      else{
+
+                      }
+                    }
+                  }
+                }
+              }
+              console.log('信息规整完成，插入了'+insertUser.length+'条用户数据，插入了'+insertSqls.length+'条chat和userinfo数据');
+              console.log('同步的聊天信息sql是：'+JSON.stringify(insertSqls));
+              console.log('同步的用户信息sql是：'+JSON.stringify(insertUser));
+              db.transaction(function(tx){
+                for(var u=0;u<insertUser.length;u++){
+                  tx.executeSql(insertUser[u]);
+                }
+                for(var z=0;z<insertSqls.length;z++){
+                  tx.executeSql(insertSqls[z]);
+                }
+              },function(err){
+                console.log('写入数据库出错了'+err.message+'if判断'+err.message.indexOf('UNIQUE'));
+                if(err.message.indexOf('UNIQUE')>-1){
+                  console.log('让服务器更新chat设备号，保持与客户端统一。');
+                  //说明是重复信息，但出现这个错误，重新向服务器发送一个请求，让服务器把相关chat的设备号改变.
+                  $mainData.setNewDeviceId({userid:token.userid,deviceid:token.deviceid,token:token.token});
+                }
+                $scope.LoadingServer=false;
+              },function(){
+                //$scope.chats=[];
+                if(mainResult.length>0||chatResult.length>0) {
+                  console.log('服务器同步了消息，发出通知');
+                  $rootScope.$broadcast('ReceiveNoRead', {mainArray: mainResult, chatArray: chatResult});
+                }
+                $scope.LoadingServer=false;
+                console.log('写入数据库成功,服务器可以修改标志位了,把这个用户相关的消息的标志位都改成这台设备的');
+                $mainData.setNewDeviceId({userid:token.userid,deviceid:token.deviceid,token:token.token});
+                isSync=true;
+              });
+            }).error(function(error){
+              $SFTools.myToast('从服务器同步信息失败'+error);
+            });
+          })
+        })
+      });
+    }
 
     $scope.receiveMessage=function(token){
       $rootScope.$on('ReciveMessage',function(event,obj){
@@ -265,12 +564,6 @@ angular.module('mainControllers',['ngCordova'])
         //从sql读取今天并且没有查看过的所有信息
         var db=null;
         db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
-        //var sqlStr='select chat.id,chat.content,chat.createAt,chat.saw,userinfo.id,userinfo.name,userinfo.image from chat,userinfo where chat.saw=0 and chat.from=userinfo.id';
-        //今天的所有消息
-        var date=new Date();
-        var DateToday=new Date();
-        DateToday.setFullYear(date.getFullYear(),date.getMonth(),date.getDay());
-        var DateTodayTime=DateToday.getTime();
 
         var SqlMainMessage='select * from main_message where master=\''+touser+'\' group by relation_user_id order by createAt';
 
@@ -444,8 +737,6 @@ angular.module('mainControllers',['ngCordova'])
       })
     }
 
-
-
     $scope.NoReadListener=function(){
       $rootScope.$on('ReceiveNoRead',function(event,obj){
         console.log('main页面收到了服务器同步的信息，同时开始同步main页面。');
@@ -528,6 +819,37 @@ angular.module('mainControllers',['ngCordova'])
         $scope.$apply();
 
       });
+    }
+
+    $scope.retry=function(token){
+      var RETRY_TIME=5;
+      var RETRY_SECOND=5;
+      $interval(function(){
+        for(var i=0;i<$scope.retryList.length;i++){
+          var retryObj=$scope.retryList[i];
+          retryObj.retryTime++;
+          //超过n秒
+          if(retryObj.retryTime>RETRY_SECOND){
+            retryObj.loop++;
+            console.log('发送的消息超时了啊'+JSON.stringify(retryObj));
+
+            //重新发送
+            iosocket.emit('private message', token.userid, retryObj.touser,retryObj.viewObject.mess ,retryObj.startTime,token.deviceid);
+            retryObj.retryTime=0;
+            retryObj.viewObject.send='retry';
+            retryObj.viewObject.retryTime=retryObj.loop;
+          }
+          //超过n次
+          if(retryObj.loop>RETRY_TIME){
+            retryObj.viewObject.send='failed';
+            //发送发送失败通知，用来告诉main页面
+            alert('发送信息失败的消息'+$rootScope.touser._id);
+            $rootScope.$broadcast('MessageFailed',{userid:retryObj.touser,timeid:retryObj.startTime});
+            //failded之后，从循环中移除
+            $scope.retryList.splice(i,1);
+          }
+        }
+      },1000)
     }
 
   }]);

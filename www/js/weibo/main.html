@@ -1,8 +1,9 @@
 <ion-view view-title="青青晓园">
   <ion-header-bar class="bar-stable bar-dark">
-    <ion-title class="title-left">晓园
+    <ion-title class="title-left">
+      <span>小缘</span>
       <span ng-if="NewMessageCount>0">({{NewMessageCount}})</span>
-      <span ng-if="LoadingServer" >同步中...</span>
+      <span><ion-spinner ng-if="LoadingServer" icon="lines" class="spinner-positive"></ion-spinner></span>
     </ion-title>
     <button class="button ion-android-add"></button>
   </ion-header-bar>
@@ -12,7 +13,7 @@
         <i class="icon ion-information-circled assertive"></i>
         &nbsp;&nbsp;&nbsp;&nbsp;网络不可用
       </div>
-      <ion-item ng-repeat="chat in chats" ng-click="openChatModal('{{chat.userid}}','{{chat.name}}')">
+      <ion-item ng-repeat="chat in chats" ng-click="chatWith('{{chat.userid}}','{{chat.name}}')">
         <!--
         <label ng-if="chat.online" class="">
           <img ng-src="chat.to.image" ng-if="chat.to.image">
@@ -25,8 +26,10 @@
         <label>
           <img ng-src="img/avata_128.jpg">
         </label>
+        <!--
         <div class="new-small" ng-if="chat.new!=0&&chat.new>9"></div>
-        <div class="new" ng-if="chat.new!=0&&chat.new<10">{{chat.new | mynum}}</div>
+        -->
+        <div class="new" ng-if="chat.new!=0">{{chat.new | mynum}}</div>
         <div class="right">
           <div class="name">
             {{chat.name}}
