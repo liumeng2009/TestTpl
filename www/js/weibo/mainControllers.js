@@ -496,7 +496,11 @@ angular.module('mainControllers',['ngCordova'])
 
         //提醒铃声
         $cordovaNativeAudio
-          .preloadSimple('click', 'audio/highhat.mp3')
+          .preloadSimple('click', 'audio/highhat.mp3').then(function (msg) {
+          console.log(msg);
+        }, function (error) {
+          alert(error);
+        });
         $cordovaNativeAudio.play('click');
 
         //实时显示
