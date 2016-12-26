@@ -22,6 +22,7 @@ angular.module('loginServices',[])
       },
       setDeviceId:function(requestParams){
         var url=config.basePath+'setdeviceid?deviceType=phone&deviceId='+requestParams.deviceId+'&token='+requestParams.token;
+        console.log(url);
         return $http({
           url:url,
           method:'GET'

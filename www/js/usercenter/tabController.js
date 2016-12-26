@@ -4,7 +4,6 @@
 angular.module('tabControllers',[])
   .controller('TabCtrl',['$scope','$rootScope','$location','$state','$SFTools','$ionicModal','$ionicScrollDelegate','$timeout','$ionicPlatform','$mainData','$cordovaNetwork','$interval',function($scope,$rootScope,$location,$state,$SFTools,$ionicModal,$ionicScrollDelegate,$timeout,$ionicPlatform,$mainData,$cordovaNetwork,$interval){
     $rootScope.isOnline=true;
-    $scope.retryList=[];
     $scope.$on('$ionicView.afterEnter',function(){
       //alert('tab after enter');
       //获取app加载的起始页面，用于点击通知打开app的方式

@@ -114,7 +114,7 @@ angular.module('chatControllers',[])
           +' union '
           +' select fromuser,touser,content,id as createAt,status from nosend where status=1 and '
           +' touser=\''+touser+'\' and fromuser=\''+_token.userid+'\''
-          +' ) order by createAt asc limit 20';
+          +' ) order by createAt desc limit 20';
         console.log('这个sql语句是：'+sqlChatAndNoSend);
 
         db.transaction(function(tx){
@@ -150,12 +150,12 @@ angular.module('chatControllers',[])
                     }
                   }
                   var chatlist=[];
-                  chatlist.push(_m);
+                  chatlist.unshift(_m);
                   var messageper={
                     createAt:rs.rows.item(i).createAt,
                     chatlist:chatlist
                   }
-                  $scope.messages.push(messageper);
+                  $scope.messages.unshift(messageper);
                 }
                 else{
                   //一个时间段的，
@@ -182,7 +182,7 @@ angular.module('chatControllers',[])
                       send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
                     }
                   }
-                  $scope.messages[$scope.messages.length-1].chatlist.push(_m);
+                  $scope.messages[$scope.messages.length-1].chatlist.unshift(_m);
                 }
               }
               else{
@@ -214,7 +214,7 @@ angular.module('chatControllers',[])
                   createAt:rs.rows.item(i).createAt,
                   chatlist:chatlist
                 }
-                $scope.messages.push(messageper);
+                $scope.messages.unshift(messageper);
               }
             }
           });
@@ -230,13 +230,14 @@ angular.module('chatControllers',[])
       //send之后，加入retryList
       //各属性描述：   发给谁的  循环次数  用户点击发送的时间  重试倒计时  在视图上的对象实例 一分钟重试一次，如果收到了服务器的回应，说明收到了，就从数组内删除
       // retry的结构是 .touser   .loop     .startTime          .retryTime  viewObject
-      //console.log('和我聊天的人是：'+$scope.touser._id+$scope.touser.name);
+      console.log('和我聊天的人是：'+$scope.touser._id+$scope.touser.name);
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
           var time=new Date();
           var timeid=time.getTime();
           var sendContent=$scope.send.sendMessage;
           //发送消息
+          console.log('发送消息');
           iosocket.emit('private message', _token.userid, $scope.touser._id, sendContent,timeid,_token.deviceid);
           //加入发送超时模块,一分钟没收到反馈，就再次发送，一直循环，持续5次。如果网络恢复，也尝试发送
           //超过五次，标识为发送不成功，再次发送需要用户确认
@@ -246,7 +247,8 @@ angular.module('chatControllers',[])
             startTime:timeid,
             retryTime:0
           };
-          $scope.retryList.push(retryObj);
+          console.log('加入重试循环');
+          $rootScope.retryList.push(retryObj);
 
           //将信息存入未发表成功的信息表
           document.addEventListener('deviceready', function() {
@@ -259,7 +261,7 @@ angular.module('chatControllers',[])
             },function(tx,error){
               console.log(tx+error);
             },function(){
-
+              //alert('插入nosend成功');
             });
           });
 
@@ -281,6 +283,7 @@ angular.module('chatControllers',[])
            });
            */
           //实时显示
+          console.log('实时显示');
           var timenow=new Date();
           var _m={
             type:'from',
@@ -293,8 +296,10 @@ angular.module('chatControllers',[])
             send:'sending'
           }
           if($scope.messages.length>0){
+            console.log('聊天信息不是0');
             var lastCreateAt=$scope.messages[$scope.messages.length-1].createAt;
             if(timenow.getTime()-lastCreateAt>TIME_SPACING*60*1000){
+              console.log('很新的一条，并且是新的时间段');
               //说明不在一个时间段
               var messageper={
                 createAt:timenow.getTime(),
@@ -304,6 +309,7 @@ angular.module('chatControllers',[])
             }
             else{
               //说明在一个时间段
+              console.log('很新的一条，不是新的时间段');
               $scope.messages[$scope.messages.length-1].chatlist.push(_m);
             }
           }
@@ -411,10 +417,10 @@ angular.module('chatControllers',[])
               }
             }
 
-            for(var k=0;k<$scope.retryList.length;k++){
-              if(obj.timeid===$scope.retryList[k].startTime&&obj.to===$scope.retryList[k].touser){
+            for(var k=0;k<$rootScope.retryList.length;k++){
+              if(obj.timeid===$rootScope.retryList[k].startTime&&obj.to===$rootScope.retryList[k].touser){
                 console.log('客户端收到了，不用再retry了');
-                $scope.retryList.splice(k,1);
+                $rootScope.retryList.splice(k,1);
                 break;
               }
             }
@@ -444,10 +450,12 @@ angular.module('chatControllers',[])
     }
 
     $scope.NoReadListener=function(token){
-      $rootScope.$on('SendingMessage',function(event,obj){
+
+      $rootScope.$on('ReceiveNoRead',function(event,obj){
         console.log('chat页面收到了服务器同步的信息，同时开始同步chat页面。');
         $scope.getMessageFromSql(token,$rootScope.touser.userid);
       });
+
     }
 
     $scope.clickRetry=function(message){

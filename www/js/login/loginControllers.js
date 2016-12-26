@@ -78,7 +78,7 @@ angular.module('loginControllers',[])
                 },function(error){
                   console.log('有错误'+error);
                 },function(){
-                  $scope.loginNext(data.user.name,data.user._id,false);
+                  $scope.loginNext(data.user.name,data.user._id,true);
                 });
               }
               else {
@@ -142,6 +142,7 @@ angular.module('loginControllers',[])
         db.executeSql('select * from users where active=1', [], function (rs) {
           var token = rs.rows.item(0).token;
           var deviceid = rs.rows.item(0).deviceId;
+          console.log('向服务器同步用户设备id');
           $loginData.setDeviceId({
             token: token,
             deviceId: deviceid
@@ -154,7 +155,7 @@ angular.module('loginControllers',[])
             //登录成功之后，跳转
             $state.go('tab.main');
           }).error(function (error) {
-            $SFTools.myToast('同步失败');
+            $SFTools.myToast('登录信息同步失败');
             $scope.loginPage = {
               action: '登录',
               noClick: false

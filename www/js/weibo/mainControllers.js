@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/7/22.
  */
 angular.module('mainControllers',['ngCordova'])
-  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform','$interval','$cordovaDevice',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform,$interval,$cordovaDevice){
+  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform','$interval','$cordovaDevice','$loginData','$cordovaNativeAudio',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform,$interval,$cordovaDevice,$loginData,$cordovaNativeAudio){
     $scope.$on('$ionicView.loaded',function(){
       alert('main loaded');
       //app默认进入页面
@@ -26,24 +26,30 @@ angular.module('mainControllers',['ngCordova'])
                 $SFTools.myToast(data.msg);
               }
               else{
-                //接收离线信息
-                $scope.initMessageFromServer(_token)
-                //初始化socket，登录到聊天服务器
-                $scope.initSocket(_token);
-                //收到了消息之后的处理
-                $scope.receiveMessage(_token);
-                //接收“用户看过了”这条消息
-                $scope.MessageSawListener();
-                //接收“用户向这个人发信息了”这条消息
-                $scope.SendingMessageListener();
-                //接收服务器收到了之后，发的通知
-                $scope.ServerReciverListener();
-                //接收用户发送失败的通知，改变view
-                $scope.MessageSendFailedListener();
-                //同步服务器消息成功，改变view
-                $scope.NoReadListener();
-                //消息发送失败的重试机制
-                $scope.retry(_token);
+                //同步设备号
+                $loginData.setDeviceId({token: _token.token, deviceId:_token.deviceid}).success(function(){
+                  $SFTools.myToast('同步服务器信息成功')
+                  //接收离线信息
+                  $scope.initMessageFromServer(_token)
+                  //初始化socket，登录到聊天服务器
+                  $scope.initSocket(_token);
+                  //收到了消息之后的处理
+                  $scope.receiveMessage(_token);
+                  //接收“用户看过了”这条消息
+                  $scope.MessageSawListener();
+                  //接收“用户向这个人发信息了”这条消息
+                  $scope.SendingMessageListener();
+                  //接收服务器收到了之后，发的通知
+                  $scope.ServerReciverListener();
+                  //接收用户发送失败的通知，改变view
+                  $scope.MessageSendFailedListener();
+                  //同步服务器消息成功，改变view
+                  $scope.NoReadListener();
+                  //消息发送失败的重试机制
+                  $scope.retry(_token);
+                }).error(function(){
+                  $SFTools.myToast('同步服务器信息失败');
+                });
               }
             })
             .error(function(){
@@ -55,7 +61,7 @@ angular.module('mainControllers',['ngCordova'])
         }
       });
     });
-
+    $rootScope.retryList=[];
     $scope.$on('$ionicView.afterEnter',function(){
       $ionicHistory.clearHistory();
       $ionicHistory.clearCache();
@@ -150,7 +156,6 @@ angular.module('mainControllers',['ngCordova'])
               var insertSqls=[];
               var insertUser=[];
               var mainServer=[];
-
               var chatResult=[];
 
               for(var i=0;i<data.chats.length;i++){
@@ -393,8 +398,9 @@ angular.module('mainControllers',['ngCordova'])
                 $mainData.setNewDeviceId({userid:token.userid,deviceid:token.deviceid,token:token.token});
                 isSync=true;
               });
-            }).error(function(error){
-              $SFTools.myToast('从服务器同步信息失败'+error);
+            }).error(function(data){
+              $SFTools.myToast('从服务器同步信息失败');
+              $scope.LoadingServer=false;
             });
           })
         })
@@ -408,8 +414,14 @@ angular.module('mainControllers',['ngCordova'])
         var db = null;
         //根据当前path决定new值，变了，根据modal是否存在而决定
         var newMessage=true;
-        if($scope.modal&&$scope.modal.isShown()&&$rootScope.touser._id&&$rootScope.touser._id===from._id){
-          newMessage=false;
+        var currentUrl=$location.path();
+        alert(currentUrl);
+        if(currentUrl.indexOf('chat')>-1){
+          //说明在chat页面
+          var urls=currentUrl.split('/');
+          if(urls[2]===obj.from._id){
+            newMessage=false;
+          }
         }
 
         //向服务器发送消息，我收到了，你的标志位可以修改了
@@ -481,6 +493,11 @@ angular.module('mainControllers',['ngCordova'])
             alert(error.message);
           });
         });
+
+        //提醒铃声
+        $cordovaNativeAudio
+          .preloadSimple('click', 'audio/highhat.mp3')
+        $cordovaNativeAudio.play('click');
 
         //实时显示
         if($scope.chats.length===0){
@@ -726,7 +743,7 @@ angular.module('mainControllers',['ngCordova'])
     //消息发送失败的消息
     $scope.MessageSendFailedListener=function(){
       $rootScope.$on('MessageFailed',function(event,obj){
-        alert('接收到了信息失败的消息'+obj.userid);
+        //alert('接收到了信息失败的消息'+obj.userid);
         for(var i=0;i<$scope.chats.length;i++){
           //alert($scope.chats[i].userid+'   '+obj.userid+'         '+$scope.chats.createAt+'     '+obj.timeid);
           if($scope.chats[i].userid===obj.userid&&$scope.chats[i].createAt===obj.timeid){
@@ -825,8 +842,8 @@ angular.module('mainControllers',['ngCordova'])
       var RETRY_TIME=5;
       var RETRY_SECOND=5;
       $interval(function(){
-        for(var i=0;i<$scope.retryList.length;i++){
-          var retryObj=$scope.retryList[i];
+        for(var i=0;i<$rootScope.retryList.length;i++){
+          var retryObj=$rootScope.retryList[i];
           retryObj.retryTime++;
           //超过n秒
           if(retryObj.retryTime>RETRY_SECOND){
@@ -846,7 +863,7 @@ angular.module('mainControllers',['ngCordova'])
             alert('发送信息失败的消息'+$rootScope.touser._id);
             $rootScope.$broadcast('MessageFailed',{userid:retryObj.touser,timeid:retryObj.startTime});
             //failded之后，从循环中移除
-            $scope.retryList.splice(i,1);
+            $rootScope.retryList.splice(i,1);
           }
         }
       },1000)

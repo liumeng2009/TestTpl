@@ -193,7 +193,7 @@
         display:block;
         width:auto;
         height:auto;
-        padding:7px 7px;
+        padding:11px 7px;
         line-height:20px;
         border-radius: 5px;
         background-color: #fff;
@@ -208,7 +208,7 @@
       span:before{
         content:'';
         position:absolute;
-        top:10px;
+        top:15px;
         left:-13px;
         border-right:7px #fff solid;
         border-left:7px transparent solid;
@@ -242,7 +242,7 @@
         display:block;
         width:auto;
         height:auto;
-        padding:7px 7px;
+        padding:11px 7px;
         line-height:20px;
         border-radius: 5px;
         background-color:#a0e75a;
@@ -257,7 +257,7 @@
       span:before{
         content:'';
         position:absolute;
-        top:10px;
+        top:15px;
         right:-13px;
         border-left:7px #a0e75a solid;
         border-right:7px transparent solid;
@@ -267,10 +267,21 @@
     }
   }
 }
+
+@keyframes popMove
+{
+  from {margin-top: 15px;}
+  to {margin-top: 54px;}
+}
+
 .pop-card{
   margin-top: 54px;
   position: relative;
   z-index:9;
+  animation: popMove 0.4s;
+  -moz-animation: popMove 0.4s;	/* Firefox */
+  -webkit-animation: popMove 0.4s;	/* Safari 和 Chrome */
+  -o-animation: popMove 0.4s;
   img{
     width:48px;
     height:48px;
@@ -298,6 +309,9 @@
       margin-left: 50px;
       font-size:14px;
       color:#8f8f8f;
+      height: 20px;
+      line-height: 20px;
+      overflow: hidden;
     }
   }
 }
