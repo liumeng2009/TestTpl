@@ -73,13 +73,23 @@
       </div>
     </ion-list>
   </ion-content>
-  <ion-footer-bar>
-    <form role="form" name="chatForm" class="item-input-inset" style="width:100%">
-      <label class="item-input-wrapper">
-        <input style="width:100%" type="text" id="outgoingChatMessage" placeholder="输入信息 ..." ng-value="send.sendMessage" ng-model="send.sendMessage" required>
+  <ion-footer-bar style="height:auto">
+    <form role="form" name="chatForm" class="item-input-inset" style="width:100%;align-items:flex-end;padding:5px;">
+      <label class="item-input-wrapper" style="background-color: transparent;border-bottom: #666 1px solid;padding-left:0px;padding-right:0px;align-items:flex-end;border-radius: 0px;">
+        <label>
+          <button style="color:#666;font-size:25px;" class="button button-large button-clear">
+            <i class="ion-ios-plus-outline"></i>
+          </button>
+        </label>
+        <textarea ng-change="CheckInputAreaHeight(this)" style="width:100%;height:36px;resize:none;line-height: 33px;padding-left:10px;padding-right:10px;" id="outgoingChatMessage" required ng-model="send.sendMessage"></textarea>
+        <label>
+          <button style="color:#666;font-size:25px;" type="submit" class="button button-large button-clear">
+            <i class="ion-happy-outline"></i>
+          </button>
+        </label>
       </label>
-      <button type="submit" class="button button-balanced" ng-click="send()" ng-disabled="chatForm.$invalid">
-        发送
+      <button style="color:#66cc33;font-size:45px;line-height:47px;" type="submit" class="button button-large button-clear" ng-click="send()" ng-disabled="chatForm.$invalid">
+        <i class="ion-ios-paperplane"></i>
       </button>
     </form>
   </ion-footer-bar>

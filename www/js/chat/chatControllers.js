@@ -76,6 +76,7 @@ angular.module('chatControllers',[])
             .success(function(data){
               if(data.success===0){
                 $SFTools.myToast(data.msg);
+                $state.go('login');
               }
               else{
                 $scope.touser.image=data.user.image;
@@ -236,6 +237,7 @@ angular.module('chatControllers',[])
           var time=new Date();
           var timeid=time.getTime();
           var sendContent=$scope.send.sendMessage;
+          //alert(sendContent);
           //发送消息
           console.log('发送消息');
           iosocket.emit('private message', _token.userid, $scope.touser._id, sendContent,timeid,_token.deviceid);
@@ -390,9 +392,11 @@ angular.module('chatControllers',[])
 
         }
       })
+      console.log('接收'+userid);
       $rootScope.$on('ServerRecive'+userid,function(event,obj){
         //alert('接到了angularjs的广播，广播名称是'+'ServerRecive 服务器说，我收到了，你做自己的处理吧'+obj.timeid+obj.from+obj.to+obj.message.content+'事件名称是');
         //服务器收到了，把nosend表的status置0，然后将信息存入chat表
+        console.log('chat页面也收到了通知'+JSON.stringify(obj));
         document.addEventListener('deviceready', function() {
           var db = null;
           db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
@@ -405,12 +409,13 @@ angular.module('chatControllers',[])
           },function(){
             //alert('数据库操作成功');
             //服务器说：你发的我收到了。chat页面找到这条信息，然后把这条信息的send:sending属性去掉
+            console.log('客户端收到了回执');
             for(var i=0;i<$scope.messages.length;i++){
               for(var j=0;j<$scope.messages[i].chatlist.length;j++){
-                //alert($scope.messages[i].chatlist[j].mess+'     '+$scope.messages[i].chatlist[j].timeid+'     '+obj.timeid+'       '+obj.message.content);
+                console.log($scope.messages[i].chatlist[j].userid+'     '+obj.from+'     '+$scope.messages[i].chatlist[j].timeid+'     '+obj.timeid);
                 if($scope.messages[i].chatlist[j].type==='from'&&$scope.messages[i].chatlist[j].userid===obj.from&&$scope.messages[i].chatlist[j].timeid===obj.timeid){
                   //说明这条信息是发送成功的那一条
-                  //alert('chat页面符合条件，修改');
+                  console.log('chat页面符合条件，修改');
                   $scope.messages[i].chatlist[j].send='';
                   break;
                 }
@@ -424,7 +429,6 @@ angular.module('chatControllers',[])
                 break;
               }
             }
-
             $scope.$apply();
           });
         });
@@ -460,6 +464,10 @@ angular.module('chatControllers',[])
 
     $scope.clickRetry=function(message){
       alert(JSON.stringify(message));
+    }
+
+    $scope.CheckInputAreaHeight=function(obj){
+
     }
 
 

@@ -2,9 +2,9 @@
  * Created by Administrator on 2016/7/22.
  */
 angular.module('mainControllers',['ngCordova'])
-  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform','$interval','$cordovaDevice','$loginData','$cordovaNativeAudio',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform,$interval,$cordovaDevice,$loginData,$cordovaNativeAudio){
+  .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform','$interval','$cordovaDevice','$loginData',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform,$interval,$cordovaDevice,$loginData){
     $scope.$on('$ionicView.loaded',function(){
-      alert('main loaded');
+      //alert('main loaded');
       //app默认进入页面
       var db = null;
       var username='';
@@ -46,7 +46,7 @@ angular.module('mainControllers',['ngCordova'])
                   //同步服务器消息成功，改变view
                   $scope.NoReadListener();
                   //消息发送失败的重试机制
-                  $scope.retry(_token);
+                  //$scope.retry(_token);
                 }).error(function(){
                   $SFTools.myToast('同步服务器信息失败');
                 });
@@ -75,7 +75,7 @@ angular.module('mainControllers',['ngCordova'])
     }
 
     $scope.initSocket=function(_token){
-      alert('初始化socket');
+      //alert('初始化socket');
       iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
       iosocket.on('connect', function () {
         console.log('连接了，不知道是重新连还是直接连，username是' + _token.name + ',_id是' + _token.userid);
@@ -94,7 +94,7 @@ angular.module('mainControllers',['ngCordova'])
       });
       //服务器说，你发的消息我收到了
       iosocket.on('reciveMessage',function(obj){
-        alert('发送广播：服务器收到了。广播的名称为serverRecive'+obj.to);
+        console.log('发送广播：服务器收到了。广播的名称为serverRecive'+obj.to);
         $rootScope.$broadcast('ServerRecive'+obj.to,obj);
         $rootScope.$broadcast('ServerRecive',obj);
         //更新main列表
@@ -494,7 +494,8 @@ angular.module('mainControllers',['ngCordova'])
           });
         });
 
-        //提醒铃声
+        //提醒铃声,不能这么做，这样做，音量是用媒体音量来控制的，不是通过铃声音量来控制的
+        /*
         $cordovaNativeAudio
           .preloadSimple('click', 'audio/highhat.mp3').then(function (msg) {
           console.log(msg);
@@ -502,7 +503,7 @@ angular.module('mainControllers',['ngCordova'])
           alert(error);
         });
         $cordovaNativeAudio.play('click');
-
+        */
         //实时显示
         if($scope.chats.length===0){
           var newObj={
@@ -718,7 +719,7 @@ angular.module('mainControllers',['ngCordova'])
     //服务器说，你发的消息我收到了，这时候main列表的处理
     $scope.ServerReciverListener=function(){
       $rootScope.$on('ServerRecive',function(event,obj){
-        //alert('debug:服务器收到了，修改main列表');
+        console.log('debug:服务器收到了，修改main列表');
         //main页面要做的事情是：main列表对应信息的‘发送中’，去掉。数据库中，sending的这条信息删除，将content createAt替换到status=1那条信息上
         for(var i=0;i<$scope.chats.length;i++){
           if($scope.chats[i].userid===obj.to){
