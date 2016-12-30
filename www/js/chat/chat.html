@@ -1,5 +1,5 @@
 <ion-view>
-  <ion-header-bar align-title="center">
+  <ion-header-bar align-title="center" class="bar-stable bar-dark">
     <button class="button button-icon icon ion-ios-arrow-left" ng-click="goMain()">
 
     </button>
@@ -23,7 +23,7 @@
     </div>
   </div>
 
-  <ion-content style="background-color: #ebebeb"  delegate-handle="chatScroll">
+  <ion-content style="background-color: #ebebeb;bottom:{{contentBottom}}px"  delegate-handle="chatScroll">
     <input id="from" type="hidden" ng-value="from" >
     <input id="to" type="hidden" ng-value="to" >
     <ion-list id="incomingChatMessages">
@@ -51,14 +51,19 @@
           </table>
           <table style="width:100%"  class="{{message.type}}" ng-if="message.type==='from'">
             <tr>
-              <td style="vertical-align: top;word-break: break-all">
+              <td style="vertical-align: top;word-break: break-all;">
                 <div class="chat">
                   <span>
-                    {{message.mess}}<br>
-                    <label style="font-size: 10px;color:green;margin-top: 10px;" ng-if="message.send==='sending'">发送中</label>
-                    <label style="font-size: 10px;color:green;margin-top: 10px;" ng-if="message.send==='retry'">第{{message.retryTime}}次重新发送</label>
-                    <label style="font-size: 10px;color:green;margin-top: 10px;" ng-if="message.send==='failed'" ng-click="clickRetry(message)" ><i class="icon ion-information-circled assertive"></i>重试发送</label>
+                    {{message.mess}}
                   </span>
+                  <div style="position: absolute;width: 33px;height: 33px;top: 50%;;left: -33px;">
+                    <ion-spinner icon="ios-small" class="spinner spinner-ios-small" ng-if="message.send==='sending'"></ion-spinner>
+                    <!--
+                    <i style="font-size: 23px" class="icon ion-ios-loop balanced"  ></i>-->
+                    <i style="position: absolute;height:33px;width:10px;top:-12px;left:-10px;line-height: 30px;text-align: center" class="balanced" ng-if="message.send==='retry'">{{message.retryTime}}</i>
+                    <ion-spinner icon="ios-small" class="spinner spinner-ios-small" ng-if="message.send==='retry'"></ion-spinner>
+                    <i ng-if="message.send==='failed'" style="font-size: 23px;font-size: 23px;position: absolute;top: -12px;" ng-click="clickRetry(message)" class="icon ion-ios-information assertive"></i>
+                  </div>
                 </div>
               </td>
               <td style="vertical-align: top;width:60px;">
@@ -77,19 +82,19 @@
     <form role="form" name="chatForm" class="item-input-inset" style="width:100%;align-items:flex-end;padding:5px;">
       <label class="item-input-wrapper" style="background-color: transparent;border-bottom: #666 1px solid;padding-left:0px;padding-right:0px;align-items:flex-end;border-radius: 0px;">
         <label>
-          <button style="color:#666;font-size:25px;" class="button button-large button-clear">
+          <button style="color:#666;font-size:25px;line-height:25px;" class="button button-large button-clear">
             <i class="ion-ios-plus-outline"></i>
           </button>
         </label>
-        <textarea ng-change="CheckInputAreaHeight(this)" style="width:100%;height:36px;resize:none;line-height: 33px;padding-left:10px;padding-right:10px;" id="outgoingChatMessage" required ng-model="send.sendMessage"></textarea>
+        <textarea ng-change="checkHeight()" style="margin-bottom:6px;width:100%;height:{{send.boxHeight}}px;resize:none;line-height: 20px;font-size:16px;padding-left:10px;padding-right:10px;" id="outgoingChatMessage" required ng-model="send.sendMessage"></textarea>
         <label>
-          <button style="color:#666;font-size:25px;" type="submit" class="button button-large button-clear">
+          <button style="color:#666;font-size:25px;line-height:25px;" type="submit" class="button button-large button-clear">
             <i class="ion-happy-outline"></i>
           </button>
         </label>
       </label>
-      <button style="color:#66cc33;font-size:45px;line-height:47px;" type="submit" class="button button-large button-clear" ng-click="send()" ng-disabled="chatForm.$invalid">
-        <i class="ion-ios-paperplane"></i>
+      <button style="color:#66cc33;font-size:35px;line-height:35px;" type="submit" class="button button-large button-clear" ng-click="send()" ng-disabled="chatForm.$invalid">
+        <i class="ion-android-send"></i>
       </button>
     </form>
   </ion-footer-bar>

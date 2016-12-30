@@ -17,34 +17,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services','s
 
     }
   });
-  TIME_SPACING=5;
   iosocket='';
   isSync=false;
-  /*
-  $SFTools.getToken(function(_token){
-    if(_token&&_token.userid&&_token!='') {
-      iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
-      iosocket.on('connect', function () {
-        console.log('连接了，不知道是重新连还是直接连，username是' + _token.name + ',_id是' + _token.userid);
-        if (_token.name != '' && _token.userid != '') {
-          iosocket.emit('login', {
-            name: _token.name,
-            _id: _token.userid,
-            type: 'page'
-          });
-        }
-      });
-      iosocket.on('reconnect',function(){
-        alert('重新连接了');
-      })
-
-    }
-    else{
-      $SFTools.myToast('请您先登陆');
-      $state.go('login');
-    }
-  });
-  */
 })
 
 .config(function($stateProvider, $urlRouterProvider,$ionicConfigProvider,$sceDelegateProvider,$ionicNativeTransitionsProvider) {

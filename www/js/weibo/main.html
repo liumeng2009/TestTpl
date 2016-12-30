@@ -1,19 +1,16 @@
 <ion-view view-title="青青晓园">
   <ion-header-bar class="bar-stable bar-dark">
     <ion-title class="title-left">
-      <span>小缘</span>
+      <span  ng-if="!isOnline"><i class="ion ion-ios-bolt assertive dis-animate"></i></span>
+      <span>{{AppName}}</span>
       <span ng-if="NewMessageCount>0">({{NewMessageCount}})</span>
-      <span><ion-spinner ng-if="LoadingServer" icon="lines" class="spinner-positive"></ion-spinner></span>
+      <span><ion-spinner ng-if="LoadingServer" icon="lines" class="spinner-balanced"></ion-spinner></span>
     </ion-title>
     <button class="button ion-android-add"></button>
   </ion-header-bar>
   <ion-content>
     <ion-list id="mainlist">
-      <div class="item item-divider" style="background-color:#ffeeee;color:#606062;padding-left:20px;height:44px;" ng-if="!isOnline">
-        <i class="icon ion-information-circled assertive"></i>
-        &nbsp;&nbsp;&nbsp;&nbsp;网络不可用
-      </div>
-      <ion-item ng-repeat="chat in chats" ng-click="chatWith('{{chat.userid}}','{{chat.name}}')">
+      <ion-item ng-repeat="chat in chats" ng-dis ng-click="chatWith('{{chat.userid}}','{{chat.name}}')">
         <!--
         <label ng-if="chat.online" class="">
           <img ng-src="chat.to.image" ng-if="chat.to.image">
@@ -38,8 +35,8 @@
             </div>
           </div>
           <p class="content">
-            <label style="font-size: 10px;line-height: 20px;color:green" ng-if="chat.type==='sending'">[发送中]</label>
-            <label style="font-size: 10px;line-height: 20px;color:red" ng-if="chat.type==='failed'"><i class="icon ion-information-circled assertive"></i></label>
+            <label style="font-size: 15px;line-height: 15px;color:green" ng-if="chat.type==='sending'"><i class="icon ion-ios-paperplane balanced"></i></label>
+            <label style="font-size: 15px;line-height: 15px;color:red" ng-if="chat.type==='failed'"><i class="icon ion-information-circled assertive"></i></label>
             {{chat.content}}
           </p>
         </div>

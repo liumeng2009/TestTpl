@@ -176,6 +176,8 @@
   float: left;
   margin-left: 10px;
   max-width: 80%;
+  position: relative;
+  min-height: 34px;
 }
 #incomingChatMessages table.to .chat span {
   display: block;
@@ -188,6 +190,7 @@
   position: relative;
   font-size: 14px;
   color: #353535;
+  min-height: 34px;
 }
 #incomingChatMessages table.to .chat label {
   color: #999;
@@ -224,6 +227,7 @@
   float: right;
   margin-right: 10px;
   max-width: 80%;
+  position: relative;
 }
 #incomingChatMessages table.from .chat span {
   display: block;
@@ -236,6 +240,7 @@
   color: #353535;
   position: relative;
   font-size: 14px;
+  min-height: 34px;
 }
 #incomingChatMessages table.from .chat label {
   color: #999;
@@ -409,4 +414,26 @@
 }
 .has-footer {
   bottom: 57px;
+}
+@keyframes disconnection-animate {
+  from {
+    color: #ef473a;
+  }
+  to {
+    color: transparent;
+  }
+}
+.dis-animate {
+  animation: disconnection-animate 2s;
+  -moz-animation: disconnection-animate 2s;
+  /* Firefox */
+  -webkit-animation: disconnection-animate 2s;
+  /* Safari 和 Chrome */
+  -o-animation: disconnection-animate 2s;
+  animation-direction: alternate;
+  -webkit-animation-direction: alternate;
+  animation-iteration-count: 999;
+  -webkit-animation-iteration-count: 999;
+  animation-timing-function: ease-in;
+  -webkit-animation-timing-function: ease-in;
 }

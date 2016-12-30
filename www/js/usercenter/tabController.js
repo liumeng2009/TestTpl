@@ -33,7 +33,4 @@ angular.module('tabControllers',[])
     $rootScope.$on('$cordovaNetwork:offline', function(event, networkState){
       $rootScope.isOnline=false;
     });
-
-
-
   }]);

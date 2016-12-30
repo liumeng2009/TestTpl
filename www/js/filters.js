@@ -7,7 +7,7 @@ angular.module('starter.filters', [])
       var out ='';
       var dateInput=new Date(input);
       var nowDate=new Date();
-      if(dateInput.getDay()===nowDate.getDay()){
+      if( dateInput.getDate()===nowDate.getDate()){
         if(dateInput.getHours()>12){
           out='今天'+(dateInput.getHours())+':'+(dateInput.getMinutes()<10?('0'+dateInput.getMinutes()):dateInput.getMinutes());
         }
@@ -18,7 +18,7 @@ angular.module('starter.filters', [])
           out='今天'+(dateInput.getHours())+':'+(dateInput.getMinutes()<10?('0'+dateInput.getMinutes()):dateInput.getMinutes());
         }
       }
-      else if(nowDate.getDay()-dateInput.getDay()===1){
+      else if(nowDate.getDate()-dateInput.getDate()===1){
         out='昨天'+(dateInput.getHours())+':'+(dateInput.getMinutes()<10?('0'+dateInput.getMinutes()):dateInput.getMinutes());
       }
       else{

@@ -14,11 +14,8 @@ angular.module('chatControllers',[])
     $scope.popMessage={
       show:false
     }
+    $scope.contentBottom=57;
     $scope.keyBoardStatus=false;
-
-    $scope.$on('$ionicView.enter',function(){
-
-    });
 
     $scope.$on('$ionicView.loaded',function(){
       //处理键盘事件
@@ -47,6 +44,9 @@ angular.module('chatControllers',[])
       }
       //处理键盘事件结束
 
+      //聊天输入框的宽度和app外部参考层的宽度一致。这是一个暂时的解决方法，最好应该自己做一个富文本显示区域
+      $('#testTextWidth').width($('#outgoingChatMessage').width());
+
       var userid=$stateParams.userid;
       var username=$stateParams.username;
 
@@ -62,6 +62,7 @@ angular.module('chatControllers',[])
             image:_token.image
           }
 
+          //alert('加载本地数据');
           $scope.getMessageFromSql(_token,userid);
           /*
           $rootScope.$on('socketReconnect',function(event,obj){
@@ -121,11 +122,12 @@ angular.module('chatControllers',[])
         db.transaction(function(tx){
           tx.executeSql(sqlChatAndNoSend,[],function(tx,rs){
             for(var i=0;i<rs.rows.length;i++){
+              var stayInRetryList=$scope.checkInRetry(rs.rows.item(i).createAt);
               //按照时间段进行分组
               if($scope.messages.length>0){
                 //和最后一个数组成员的createAt作比较，小于一分钟就同一组，大于一分钟就重新建立一个数组成员push进去
-                //alert(rs.rows.item(i).createAt+'减去'+$scope.messages[$scope.messages.length-1].createAt+'等于'+rs.rows.item(i).createAt-$scope.messages[$scope.messages.length-1].createAt);
-                if(rs.rows.item(i).createAt-$scope.messages[$scope.messages.length-1].createAt>TIME_SPACING*60*1000){
+                //console.log(rs.rows.item(i).createAt+'减去'+$scope.messages[0].createAt+'等于'+ parseInt(rs.rows.item(i).createAt)- parseInt($scope.messages[0].createAt));
+                if($scope.messages[0].createAt-rs.rows.item(i).createAt>config.timeSpacing*60*1000){
                   //说明间隔时间很长，要建立新的时间段
                   var _m;
                   if(_token.userid===rs.rows.item(i).fromuser){
@@ -136,7 +138,7 @@ angular.module('chatControllers',[])
                       username:_token.name,
                       mess:rs.rows.item(i).content,
                       createAt:rs.rows.item(i).createAt,
-                      send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                      send:rs.rows.item(i).status.toString()==='1'?(stayInRetryList?'sending':'failed'):rs.rows.item(i).status.toString()
                     }
                   }
                   else{
@@ -147,7 +149,7 @@ angular.module('chatControllers',[])
                       userid:touser._id,
                       mess:rs.rows.item(i).content,
                       createAt:rs.rows.item(i).createAt,
-                      send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                      send:rs.rows.item(i).status.toString()
                     }
                   }
                   var chatlist=[];
@@ -169,7 +171,7 @@ angular.module('chatControllers',[])
                       userid:_token.userid,
                       mess:rs.rows.item(i).content,
                       createAt:rs.rows.item(i).createAt,
-                      send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                      send:rs.rows.item(i).status.toString()==='1'?(stayInRetryList?'sending':'failed'):rs.rows.item(i).status.toString()
                     }
                   }
                   else{
@@ -180,10 +182,11 @@ angular.module('chatControllers',[])
                       userid:touser._id,
                       mess:rs.rows.item(i).content,
                       createAt:rs.rows.item(i).createAt,
-                      send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                      send:rs.rows.item(i).status.toString()
                     }
                   }
-                  $scope.messages[$scope.messages.length-1].chatlist.unshift(_m);
+                  $scope.messages[0].chatlist.unshift(_m);
+                  $scope.messages[0].createAt=rs.rows.item(i).createAt;
                 }
               }
               else{
@@ -196,7 +199,7 @@ angular.module('chatControllers',[])
                     userid:_token.userid,
                     mess:rs.rows.item(i).content,
                     createAt:rs.rows.item(i).createAt,
-                    send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                    send:rs.rows.item(i).status.toString()==='1'?(stayInRetryList?'sending':'failed'):rs.rows.item(i).status.toString()
                   }
                 }
                 else{
@@ -207,7 +210,7 @@ angular.module('chatControllers',[])
                     userid:touser._id,
                     mess:rs.rows.item(i).content,
                     createAt:rs.rows.item(i).createAt,
-                    send:rs.rows.item(i).status.toString()==='1'?'sending':rs.rows.item(i).status.toString()
+                    send:rs.rows.item(i).status.toString()
                   }
                 }
                 var chatlist=[_m];
@@ -227,6 +230,19 @@ angular.module('chatControllers',[])
 
       });
     }
+    $scope.checkInRetry=function(id){
+      for(var i=0;i<$rootScope.retryList.length;i++){
+        console.log($rootScope.retryList[i].startTime+'        '+id);
+        if($rootScope.retryList[i].startTime===id){
+          return true;
+        }
+        else{
+          if(i===$rootScope.retryList.length-1){
+            return false;
+          }
+        }
+      }
+    }
     $scope.send=function(){
       //send之后，加入retryList
       //各属性描述：   发给谁的  循环次数  用户点击发送的时间  重试倒计时  在视图上的对象实例 一分钟重试一次，如果收到了服务器的回应，说明收到了，就从数组内删除
@@ -237,53 +253,7 @@ angular.module('chatControllers',[])
           var time=new Date();
           var timeid=time.getTime();
           var sendContent=$scope.send.sendMessage;
-          //alert(sendContent);
-          //发送消息
-          console.log('发送消息');
-          iosocket.emit('private message', _token.userid, $scope.touser._id, sendContent,timeid,_token.deviceid);
-          //加入发送超时模块,一分钟没收到反馈，就再次发送，一直循环，持续5次。如果网络恢复，也尝试发送
-          //超过五次，标识为发送不成功，再次发送需要用户确认
-          var retryObj={
-            touser:$scope.touser._id,
-            loop:0,
-            startTime:timeid,
-            retryTime:0
-          };
-          console.log('加入重试循环');
-          $rootScope.retryList.push(retryObj);
 
-          //将信息存入未发表成功的信息表
-          document.addEventListener('deviceready', function() {
-            var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
-            // status=1 默认 status=0的时候，说明这条数据发送成功了 id列就是时间
-            db.executeSql('create table if not exists nosend(id,fromuser,touser,content,status)');
-            db.transaction(function(tx){
-              //alert('我发信息给'+$scope.touser._id);
-              tx.executeSql('insert into nosend values(?,?,?,?,?)',[timeid,_token.userid,$scope.touser._id,sendContent,1]);
-            },function(tx,error){
-              console.log(tx+error);
-            },function(){
-              //alert('插入nosend成功');
-            });
-          });
-
-          //发送广播，用户发送信息了,main页面可以接收，改变自己的视图
-          //alert('发送消息的通知'+sendContent);
-          $rootScope.$broadcast('SendingMessage',{userid:$scope.touser._id,content:sendContent,timeid:timeid,username:$scope.touser.name,image:$scope.touser.image});
-
-          /*
-           document.addEventListener('deviceready', function() {
-           var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
-           //main-message列表存入一条status=sending的消息
-           var master = _token.userid;
-           var relation_user = $scope.touser.username;
-           var relation_user_id = $scope.touser._id;
-           var main_content = sendContent;
-           var main_saw = 0;
-           var main_status = 'sending';
-           db.executeSql('insert into main_message values(?,?,?,?,?,?,?,?)', [master, relation_user, relation_user_id, main_content, timeid, main_saw, main_status,'']);
-           });
-           */
           //实时显示
           console.log('实时显示');
           var timenow=new Date();
@@ -298,9 +268,9 @@ angular.module('chatControllers',[])
             send:'sending'
           }
           if($scope.messages.length>0){
-            console.log('聊天信息不是0');
+            console.log('聊天信息不是0'+$scope.messages[$scope.messages.length-1].createAt);
             var lastCreateAt=$scope.messages[$scope.messages.length-1].createAt;
-            if(timenow.getTime()-lastCreateAt>TIME_SPACING*60*1000){
+            if(timenow.getTime()-lastCreateAt>config.timeSpacing*60*1000){
               console.log('很新的一条，并且是新的时间段');
               //说明不在一个时间段
               var messageper={
@@ -322,14 +292,47 @@ angular.module('chatControllers',[])
             }
             $scope.messages.push(messageper);
           }
+          console.log('send的消息是：'+$scope.messages[$scope.messages.length-1].chatlist[$scope.messages[$scope.messages.length-1].chatlist.length-1].mess);
+          $scope.send.sendMessage = '';
+          $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
+          $scope.$apply();
+          //加入发送超时模块,一分钟没收到反馈，就再次发送，一直循环，持续5次。如果网络恢复，也尝试发送
+          //超过五次，标识为发送不成功，再次发送需要用户确认
+          var retryObj={
+            touser:$scope.touser._id,
+            loop:0,
+            startTime:timeid,
+            retryTime:0
+          };
+          console.log('加入重试循环');
+          $rootScope.retryList.push(retryObj);
           //将这条发送消息的视图实例，赋值到重试列表中.
           retryObj.viewObject=_m;
 
 
-          $scope.send.sendMessage = '';
-          //$ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
-          $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
-          $scope.$apply();
+          //将信息存入未发表成功的信息表
+          document.addEventListener('deviceready', function() {
+            var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+            // status=1 默认 status=0的时候，说明这条数据发送成功了 id列就是时间
+            db.executeSql('create table if not exists nosend(id,fromuser,touser,content,status)');
+            db.transaction(function(tx){
+              //alert('我发信息给'+$scope.touser._id);
+              tx.executeSql('insert into nosend values(?,?,?,?,?)',[timeid,_token.userid,$scope.touser._id,sendContent,1]);
+            },function(tx,error){
+              console.log(tx+error);
+            },function(){
+              //alert('插入nosend成功');
+            });
+          });
+
+          //发送广播，用户发送信息了,main页面可以接收，改变自己的视图
+          //alert('发送消息的通知'+sendContent);
+          $rootScope.$broadcast('SendingMessage',{userid:$scope.touser._id,content:sendContent,timeid:timeid,username:$scope.touser.name,image:$scope.touser.image});
+
+          //发送消息
+          console.log('发送消息');
+          iosocket.emit('private message', _token.userid, $scope.touser._id, sendContent,timeid,_token.deviceid);
+
         }
       });
     };
@@ -348,7 +351,7 @@ angular.module('chatControllers',[])
             }
             var timeMessage=new Date(obj.message.meta.createAt);
             var timeLast=$scope.messages[$scope.messages.length-1].createAt;
-            if(timeMessage-timeLast>TIME_SPACING*60*1000){
+            if(timeMessage-timeLast>config.timeSpacing*60*1000){
               var messageper={
                 createAt:timeMessage,
                 chatlist:[_m]
@@ -394,9 +397,36 @@ angular.module('chatControllers',[])
       })
       console.log('接收'+userid);
       $rootScope.$on('ServerRecive'+userid,function(event,obj){
+        console.log('最后一条信息内容是：'+$scope.messages[$scope.messages.length-1].chatlist[$scope.messages[$scope.messages.length-1].chatlist.length-1].mess);
+        console.log(JSON.stringify($scope.messages));
+        console.log(JSON.stringify($scope.messages[0]));
         //alert('接到了angularjs的广播，广播名称是'+'ServerRecive 服务器说，我收到了，你做自己的处理吧'+obj.timeid+obj.from+obj.to+obj.message.content+'事件名称是');
         //服务器收到了，把nosend表的status置0，然后将信息存入chat表
         console.log('chat页面也收到了通知'+JSON.stringify(obj));
+        //修改视图
+        for(var i=0;i<$scope.messages.length;i++){
+          for(var j=0;j<$scope.messages[i].chatlist.length;j++){
+            console.log(i+'    '+j);
+            console.log($scope.messages[i].chatlist[j].mess);
+            //console.log('经常未定义的对象是：'+JSON.stringify($scope.messages[i].chatlist[j])+ $scope.messages[i].chatlist[j].userid+'     '+obj.from+'     '+$scope.messages[i].chatlist[j].timeid+'     '+obj.timeid);
+            if($scope.messages[i].chatlist[j].type==='from'&&$scope.messages[i].chatlist[j].userid===obj.from&&$scope.messages[i].chatlist[j].timeid===obj.timeid){
+              //说明这条信息是发送成功的那一条
+              console.log('chat页面符合条件，修改');
+              $scope.messages[i].chatlist[j].send='';
+              break;
+            }
+          }
+        }
+
+        for(var k=0;k<$rootScope.retryList.length;k++){
+          if(obj.timeid===$rootScope.retryList[k].startTime&&obj.to===$rootScope.retryList[k].touser){
+            console.log('客户端收到了，不用再retry了');
+            $rootScope.retryList.splice(k,1);
+            break;
+          }
+        }
+        $scope.$apply();
+        //修改sql
         document.addEventListener('deviceready', function() {
           var db = null;
           db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
@@ -409,27 +439,7 @@ angular.module('chatControllers',[])
           },function(){
             //alert('数据库操作成功');
             //服务器说：你发的我收到了。chat页面找到这条信息，然后把这条信息的send:sending属性去掉
-            console.log('客户端收到了回执');
-            for(var i=0;i<$scope.messages.length;i++){
-              for(var j=0;j<$scope.messages[i].chatlist.length;j++){
-                console.log($scope.messages[i].chatlist[j].userid+'     '+obj.from+'     '+$scope.messages[i].chatlist[j].timeid+'     '+obj.timeid);
-                if($scope.messages[i].chatlist[j].type==='from'&&$scope.messages[i].chatlist[j].userid===obj.from&&$scope.messages[i].chatlist[j].timeid===obj.timeid){
-                  //说明这条信息是发送成功的那一条
-                  console.log('chat页面符合条件，修改');
-                  $scope.messages[i].chatlist[j].send='';
-                  break;
-                }
-              }
-            }
-
-            for(var k=0;k<$rootScope.retryList.length;k++){
-              if(obj.timeid===$rootScope.retryList[k].startTime&&obj.to===$rootScope.retryList[k].touser){
-                console.log('客户端收到了，不用再retry了');
-                $rootScope.retryList.splice(k,1);
-                break;
-              }
-            }
-            $scope.$apply();
+            //console.log('客户端收到了回执'+$scope.messages.length);
           });
         });
       });
@@ -466,10 +476,14 @@ angular.module('chatControllers',[])
       alert(JSON.stringify(message));
     }
 
-    $scope.CheckInputAreaHeight=function(obj){
-
+    $scope.send.boxHeight=20;
+    $scope.checkHeight=function(){
+      $('#testTextWidth').text($scope.send.sendMessage);
+      var OutDivheight=$('#testTextWidth').height();
+      var heightIndex=OutDivheight/20===0?1:OutDivheight/20;
+      $scope.send.boxHeight=heightIndex*20;
+      $scope.contentBottom=57+OutDivheight-20;
+      console.log($scope.contentBottom);
+      $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
     }
-
-
-
   }]);

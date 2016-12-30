@@ -3,6 +3,8 @@
  */
 angular.module('mainControllers',['ngCordova'])
   .controller('MainCtrl',['$scope','$rootScope','$state','$ionicModal','$usercenterData','$mainData','$ionicLoading','$ionicPopup','$timeout','$window','$cordovaToast','$SFTools','$location','$ionicHistory','$cordovaStatusbar','$ionicScrollDelegate','$cordovaKeyboard','$ionicPlatform','$interval','$cordovaDevice','$loginData',function($scope,$rootScope,$state,$ionicModal,$usercenterData,$mainData,$ionicLoading,$ionicPopup,$timeout,$window,$cordovaToast,$SFTools,$location,$ionicHistory,$cordovaStatusbar,$ionicScrollDelegate,$cordovaKeyboard,$ionicPlatform,$interval,$cordovaDevice,$loginData){
+    $scope.AppName=config.appName;
+    $rootScope.retryList=[];
     $scope.$on('$ionicView.loaded',function(){
       //alert('main loaded');
       //app默认进入页面
@@ -32,7 +34,7 @@ angular.module('mainControllers',['ngCordova'])
                   //接收离线信息
                   $scope.initMessageFromServer(_token)
                   //初始化socket，登录到聊天服务器
-                  $scope.initSocket(_token);
+                  $scope.retrySocket(_token);
                   //收到了消息之后的处理
                   $scope.receiveMessage(_token);
                   //接收“用户看过了”这条消息
@@ -46,7 +48,7 @@ angular.module('mainControllers',['ngCordova'])
                   //同步服务器消息成功，改变view
                   $scope.NoReadListener();
                   //消息发送失败的重试机制
-                  //$scope.retry(_token);
+                  $scope.retry(_token);
                 }).error(function(){
                   $SFTools.myToast('同步服务器信息失败');
                 });
@@ -61,22 +63,41 @@ angular.module('mainControllers',['ngCordova'])
         }
       });
     });
-    $rootScope.retryList=[];
+
     $scope.$on('$ionicView.afterEnter',function(){
+      //让app不往前面的url跳
       $ionicHistory.clearHistory();
       $ionicHistory.clearCache();
     });
 
     $scope.chatWith=function(id,name){
-      $state.go('chat',{
-        userid:id,
-        username:name
-      });
+      if(id!=0) {
+        $state.go('chat', {
+          userid: id,
+          username: name
+        });
+      }
+    }
+
+    $scope.retrySocket=function(_token){
+      $scope.initSocket(_token)
+      $interval(function(){
+        console.log('客户端检查，并且重连'+iosocket.connected+iosocket.id);
+        if(iosocket&&iosocket.connected){
+          //正常
+          console.log('socket正常');
+        }
+        else{
+          console.log('socket不正常');
+          $scope.initSocket(_token)
+        }
+
+      },10*1000);
     }
 
     $scope.initSocket=function(_token){
-      //alert('初始化socket');
-      iosocket = io.connect('http://liumeng.iego.cn/', {'reconnect': true});
+      //尝试建立客户端的主动重连机制，一分钟一次
+      iosocket = io.connect(config.serverPath, {'reconnect': true});
       iosocket.on('connect', function () {
         console.log('连接了，不知道是重新连还是直接连，username是' + _token.name + ',_id是' + _token.userid);
         if (_token.name != '' && _token.userid != '') {
@@ -110,9 +131,18 @@ angular.module('mainControllers',['ngCordova'])
         }
       });
       iosocket.on('reconnect',function(){
-        alert('重新连接事件触发，发出通知，tab页面，可以用这个通知来加载离线消息。');
-        $rootScope.$broadcast('socketReconnect',{});
+        console.log('重新连接事件触发，发出通知，可以用这个通知来加载离线消息。');
+        //$rootScope.$broadcast('socketReconnect',{});
+        $scope.initMessageFromServer(_token);
       });
+      iosocket.on('ping',function(obj){
+        console.log('server ping'+iosocket.id);
+      });
+
+      iosocket.on('disconnect',function(){
+        console.log('服务器断开连接了');
+      })
+
     }
 
     //从服务器同步离线消息，并发出全局通知
@@ -406,7 +436,7 @@ angular.module('mainControllers',['ngCordova'])
         })
       });
     }
-
+    //接收消息，收到别人的消息的处理
     $scope.receiveMessage=function(token){
       $rootScope.$on('ReciveMessage',function(event,obj){
         var chat=obj.message;
@@ -415,7 +445,6 @@ angular.module('mainControllers',['ngCordova'])
         //根据当前path决定new值，变了，根据modal是否存在而决定
         var newMessage=true;
         var currentUrl=$location.path();
-        alert(currentUrl);
         if(currentUrl.indexOf('chat')>-1){
           //说明在chat页面
           var urls=currentUrl.split('/');
@@ -570,6 +599,7 @@ angular.module('mainControllers',['ngCordova'])
         $scope.$apply();
       })
     }
+    //欢迎信息初始化
     $scope.initChat=function(_token){
       var chatXiaoYuan={
         id:0,
@@ -581,6 +611,7 @@ angular.module('mainControllers',['ngCordova'])
       };
       $scope.chats.push(chatXiaoYuan);
     }
+    //加载在手机sql中存的前20条
     $scope.initMessageFromSql=function(touser){
       document.addEventListener('deviceready', function() {
         //从sql读取今天并且没有查看过的所有信息
@@ -592,7 +623,6 @@ angular.module('mainControllers',['ngCordova'])
         db.transaction(function(tx){
           tx.executeSql(SqlMainMessage,[],function(tx,rs){
             for(var i=0;i<rs.rows.length;i++){
-
               var chat={
                 id:'',
                 name:rs.rows.item(i).relation_user,
@@ -662,14 +692,18 @@ angular.module('mainControllers',['ngCordova'])
               }
 
             }
+
+            //排序
+            $scope.mainSortByCreateTime();
+
           },function(error){
 
           });
-          $scope.$apply();
           console.log('transaction success');
         });
       });
     }
+
     //这个人的信息被看了，main列表的saw置0
     $scope.MessageSawListener=function(){
       $rootScope.$on('SawMessage',function(event,obj){
@@ -683,6 +717,7 @@ angular.module('mainControllers',['ngCordova'])
         }
       })
     }
+
     //向这个人发送信息了，这条信息体现在main列表中
     $scope.SendingMessageListener=function(){
       $rootScope.$on('SendingMessage',function(event,obj){
@@ -693,6 +728,10 @@ angular.module('mainControllers',['ngCordova'])
             $scope.chats[i].type='sending';
             $scope.chats[i].content=content;
             $scope.chats[i].createAt=obj.timeid;
+            //将这条消息置前
+            var obj=$scope.chats[i];
+            $scope.chats.splice(i,1);
+            $scope.chats.unshift(obj);
             break;
           }
           else{
@@ -708,7 +747,7 @@ angular.module('mainControllers',['ngCordova'])
                 type:'sending'
               }
               //alert(JSON.stringify(chatObj)+JSON.stringify(chatObj2));
-              $scope.chats.push(chatObj);
+              $scope.chats.unshift(chatObj);
               //$scope.chats.push(chatObj2);
               //$scope.$apply();
             }
@@ -716,6 +755,7 @@ angular.module('mainControllers',['ngCordova'])
         }
       });
     }
+
     //服务器说，你发的消息我收到了，这时候main列表的处理
     $scope.ServerReciverListener=function(){
       $rootScope.$on('ServerRecive',function(event,obj){
@@ -745,6 +785,7 @@ angular.module('mainControllers',['ngCordova'])
 
       });
     }
+
     //消息发送失败的消息
     $scope.MessageSendFailedListener=function(){
       $rootScope.$on('MessageFailed',function(event,obj){
@@ -758,7 +799,7 @@ angular.module('mainControllers',['ngCordova'])
         }
       })
     }
-
+    //离线信息收到之后的处理
     $scope.NoReadListener=function(){
       $rootScope.$on('ReceiveNoRead',function(event,obj){
         console.log('main页面收到了服务器同步的信息，同时开始同步main页面。');
@@ -797,22 +838,22 @@ angular.module('mainControllers',['ngCordova'])
           }
         }
         else{
-
           //有死循环
-
           for(var i=0;i<mainArray.length;i++){
             console.log('i是：'+i);
             for(var j=0;j<$scope.chats.length;j++){
               console.log('j是：'+j);
-              console.log('数据是'+$scope.chats[j].relation_user_id+'和'+mainArray[i].relation_user_id+'和'+mainArray[i].createAt+'和'+$scope.chats[j].createAt);
+              console.log('数据是'+$scope.chats[j].userid+'和'+mainArray[i].relation_user_id+'和'+mainArray[i].createAt+'和'+$scope.chats[j].createAt);
               if($scope.chats[j].userid===mainArray[i].relation_user_id&&mainArray[i].createAt>$scope.chats[j].createAt){
-                console.log('同一个人的信息');
+                console.log('同一个人的信息'+$scope.chats[j].saw+'       '+mainArray[i].saw);
                 $scope.chats[j].content=mainArray[i].content;
                 $scope.chats[j].createAt=mainArray[i].createAt;
-                if($scope.chats[j].saw===0){
+                if(!$scope.chats[j].saw||$scope.chats[j].saw===0){
+                  console.log('liu');
                   $scope.chats[j].saw=mainArray[i].saw;
                 }
                 else{
+                  console.log('li'+parseInt($scope.chats[j].saw)+parseInt(mainArray[i].saw));
                   $scope.chats[j].saw=  parseInt($scope.chats[j].saw)+parseInt(mainArray[i].saw);
                 }
                 break;
@@ -838,6 +879,7 @@ angular.module('mainControllers',['ngCordova'])
           }
         }
         console.log(JSON.stringify($scope.chats))
+        $scope.mainSortByCreateTime();
         $scope.$apply();
 
       });
@@ -865,13 +907,26 @@ angular.module('mainControllers',['ngCordova'])
           if(retryObj.loop>RETRY_TIME){
             retryObj.viewObject.send='failed';
             //发送发送失败通知，用来告诉main页面
-            alert('发送信息失败的消息'+$rootScope.touser._id);
+            alert('发送信息失败的消息'+retryObj.touser._id);
             $rootScope.$broadcast('MessageFailed',{userid:retryObj.touser,timeid:retryObj.startTime});
             //failded之后，从循环中移除
             $rootScope.retryList.splice(i,1);
           }
         }
       },1000)
+    }
+    //首页视图排序
+    $scope.mainSortByCreateTime=function(){
+      for(var i=0;i<$scope.chats.length;i++){
+        for(var j=0;j<$scope.chats.length-i-1;j++){
+          if($scope.chats[j].createAt<$scope.chats[j+1].createAt){
+            var temp=$scope.chats[j];
+            $scope.chats[j]=$scope.chats[j+1];
+            $scope.chats[j+1]=temp;
+          }
+        }
+      }
+      $scope.$apply();
     }
 
   }]);
