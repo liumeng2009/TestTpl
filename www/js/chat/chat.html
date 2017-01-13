@@ -23,7 +23,7 @@
     </div>
   </div>
 
-  <ion-content style="background-color: #ebebeb;bottom:{{contentBottom}}px"  delegate-handle="chatScroll">
+  <ion-content style="background-color:#ebebeb;bottom:{{contentBottom}}px;"  delegate-handle="chatScroll">
     <input id="from" type="hidden" ng-value="from" >
     <input id="to" type="hidden" ng-value="to" >
     <ion-list id="incomingChatMessages">
@@ -60,7 +60,9 @@
                     <ion-spinner icon="ios-small" class="spinner spinner-ios-small" ng-if="message.send==='sending'"></ion-spinner>
                     <!--
                     <i style="font-size: 23px" class="icon ion-ios-loop balanced"  ></i>-->
+                    <!--
                     <i style="position: absolute;height:33px;width:10px;top:-12px;left:-10px;line-height: 30px;text-align: center" class="balanced" ng-if="message.send==='retry'">{{message.retryTime}}</i>
+                    -->
                     <ion-spinner icon="ios-small" class="spinner spinner-ios-small" ng-if="message.send==='retry'"></ion-spinner>
                     <i ng-if="message.send==='failed'" style="font-size: 23px;font-size: 23px;position: absolute;top: -12px;" ng-click="clickRetry(message)" class="icon ion-ios-information assertive"></i>
                   </div>
@@ -78,24 +80,28 @@
       </div>
     </ion-list>
   </ion-content>
-  <ion-footer-bar style="height:auto">
-    <form role="form" name="chatForm" class="item-input-inset" style="width:100%;align-items:flex-end;padding:5px;">
-      <label class="item-input-wrapper" style="background-color: transparent;border-bottom: #666 1px solid;padding-left:0px;padding-right:0px;align-items:flex-end;border-radius: 0px;">
-        <label>
-          <button style="color:#666;font-size:25px;line-height:25px;" class="button button-large button-clear">
-            <i class="ion-ios-plus-outline"></i>
-          </button>
-        </label>
-        <textarea ng-change="checkHeight()" style="margin-bottom:6px;width:100%;height:{{send.boxHeight}}px;resize:none;line-height: 20px;font-size:16px;padding-left:10px;padding-right:10px;" id="outgoingChatMessage" required ng-model="send.sendMessage"></textarea>
-        <label>
-          <button style="color:#666;font-size:25px;line-height:25px;" type="submit" class="button button-large button-clear">
-            <i class="ion-happy-outline"></i>
-          </button>
-        </label>
+  <ion-footer-bar style="height:auto;background: none !important;">
+    <form role="form" name="chatForm" class="item-input-inset" style="width:100%;align-items:{{send.areaPosition}};padding:0px;">
+      <label>
+        <button style="color:#444444;font-size:30px;line-height:38px;" class="button button-large button-clear">
+          <i class="ion-ios-plus-outline"></i>
+        </button>
       </label>
-      <button style="color:#66cc33;font-size:35px;line-height:35px;" type="submit" class="button button-large button-clear" ng-click="send()" ng-disabled="chatForm.$invalid">
-        <i class="ion-android-send"></i>
-      </button>
+      <label class="item-input-wrapper" style="background-color: transparent;border-bottom: #a0e75a 1px solid;padding-left:0px;padding-right:0px;align-items:flex-end;">
+        <!--
+        <input style="width:100%;height:39px;" type="text" id="outgoingChatMessage" ng-value="sendMessage" ng-model="sendMessage" required>-->
+        <textarea ng-change="checkHeight()" style="width:100%;height:{{send.boxHeight}}px;resize:none;line-height: {{send.boxLineHeight}}px;font-size:16px;padding-left:10px;padding-right:10px" id="outgoingChatMessage"  ng-model="send.sendMessage" required></textarea>
+      </label>
+      <label>
+        <button style="color:#444444;font-size:30px;line-height:38px;" type="submit" class="button button-large button-clear">
+          <i class="ion-ios-star-outline"></i>
+        </button>
+      </label>
+      <label style="margin: 0px 10px;">
+        <button style="font-size:38px;line-height: 38px;color:#444" type="submit" class="button button-large button-clear" ng-click="send()">
+          <i class="ion-ios-paperplane-outline"></i>
+        </button>
+      </label>
     </form>
   </ion-footer-bar>
 </ion-view>

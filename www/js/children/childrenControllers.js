@@ -3,9 +3,9 @@
  */
 var selectPop;
 angular.module('childrenControllers',[])
-  .controller('ChildrenCtrl',['$scope','$rootScope','$ionicModal','$state','$usercenterData','$schoolData','$gradeData','$childrenData','$ionicLoading','$ionicPopup','$timeout','$window','$SFTools',function($scope,$rootScope,$ionicModal,$state,$usercenterData,$schoolData,$gradeData,$childrenData,$ionicLoading,$ionicPopup,$timeout,$window,$SFTools){
+  .controller('ChildrenCtrl',['$scope','$rootScope','$ionicModal','$state','$usercenterData','$schoolData','$gradeData','$childrenData','$ionicLoading','$ionicPopup','$timeout','$window','$SFTools','$ionicNativeTransitions',function($scope,$rootScope,$ionicModal,$state,$usercenterData,$schoolData,$gradeData,$childrenData,$ionicLoading,$ionicPopup,$timeout,$window,$SFTools,$ionicNativeTransitions){
     $scope.$on('$ionicView.afterEnter',function(){
-      $ionicLoading.show();
+      //$ionicLoading.show();
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
           $childrenData.list({token:_token.token})
@@ -13,7 +13,7 @@ angular.module('childrenControllers',[])
               if(data.success === 0){
                 $SFTools.myToast(data.msg);
               }else{
-                $ionicLoading.hide();
+                //$ionicLoading.hide();
                 $scope.students=data.students;
 
                 //确定studentnow
@@ -48,7 +48,7 @@ angular.module('childrenControllers',[])
                   $childrenData.chat_list({token:_token.token,studentid:$scope.studentnow._id})
                     .success(function(data){
                       $scope.users=data.users;
-                      alert('这个用户的孩子是：'+data.users[0].sons[0].name);
+                      //alert('这个用户的孩子是：'+data.users[0].sons[0].name);
                     })
                     .error(function(){
                       $SFTools.myToast('网络连接错误');
@@ -61,7 +61,7 @@ angular.module('childrenControllers',[])
               }
             })
             .error(function(){
-              $ionicLoading.hide();
+              //$ionicLoading.hide();
               $SFTools.myToast('网络连接错误');
             });
         }
@@ -209,34 +209,17 @@ angular.module('childrenControllers',[])
 
       });
     }
-    $scope.chatWithUser=function(_id,_name){
-      $SFTools.getToken(function(_token){
-        if(_token&&_token.userid&&_token!='') {
-          $usercenterData.usercenter({token:_token.token})
-            .success(function(data){
-              if(data.success === 0){
-                $SFTools.myToast(data.msg);
-              }else{
-                $state.go('chat',{
-                  from:{
-                    _id:data.user._id,
-                    name:data.user.name
-                  },
-                  to:{
-                    _id:_id,
-                    name:_name
-                  }
-                });
-              }
-            })
-            .error(function(){
-              $SFTools.myToast('网络连接错误');
-            });
-        }
-        else{
-          $state.go('login',{redirectUrl:'tab.children'});
-        }
-      });
+    $scope.chatWith=function(id,name){
+      if(id!=0) {
+        $ionicNativeTransitions.stateGo('chat', {userid:id,username:name}, {}, {
+          "type": "slide",
+          "direction": "left", // 'left|right|up|down', default 'left' (which is like 'next')
+          "duration": 200, // in milliseconds (ms), default 400
+        });
+      }
+      else{
+        $SFTools.myToast('welcome to XiaoYuan IM!');
+      }
     }
     $scope.select_student=function(id){
       $SFTools.getToken(function(_token){

@@ -2,7 +2,7 @@
  * Created by Administrator on 2016/6/27.
  */
 angular.module('loginControllers',[])
-  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaToast','$cordovaSQLite','$cordovaDevice','$SFTools',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaToast,$cordovaSQLite,$cordovaDevice,$SFTools){
+  .controller('LoginCtrl',['$scope','$state','$stateParams','$ionicModal','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$cordovaToast','$cordovaSQLite','$cordovaDevice','$SFTools','$cordovaFile','$cordovaPreferences','$ionicNativeTransitions',function($scope,$state,$stateParams,$ionicModal,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$cordovaToast,$cordovaSQLite,$cordovaDevice,$SFTools,$cordovaFile,$cordovaPreferences,$ionicNativeTransitions){
     $scope.loginPage={
       action:'登录',
       noClick:false
@@ -55,10 +55,11 @@ angular.module('loginControllers',[])
         console.log('请求登录信息是：'+JSON.stringify(data));
         if (data.success !== 0) {
           //成功，把token存入Sql
-          document.addEventListener('deviceready', function () {
+          document.addEventListener('deviceready',function(){
             var db = null;
-            db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+            db = window.sqlitePlugin.openDatabase({name: data.user._id+'.db3', location: 'default'});
             var uuid=$cordovaDevice.getUUID();
+            console.log(uuid);
             db.executeSql('create table if not exists users(id,name,active,image,token,createAt,deviceId)');
             db.executeSql('select count(*) AS mycount from users where id=?', [data.user._id], function (rs) {
               var count = rs.rows.item(0).mycount;
@@ -96,6 +97,7 @@ angular.module('loginControllers',[])
                 });
               }
             });
+            //同时更新一下用户信息
             db.executeSql('create table if not exists userinfo(id,name,image,showInMain)');
             db.executeSql('select count(*) as mycount from userinfo where id=?',[data.user._id],function(rs){
               var count = rs.rows.item(0).mycount;
@@ -138,7 +140,7 @@ angular.module('loginControllers',[])
       console.log('next');
       if(createDeviceId) {
         var db = null;
-        db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+        db = window.sqlitePlugin.openDatabase({name: userid+'.db3', location: 'default'});
         db.executeSql('select * from users where active=1', [], function (rs) {
           var token = rs.rows.item(0).token;
           var deviceid = rs.rows.item(0).deviceId;
@@ -152,6 +154,25 @@ angular.module('loginControllers',[])
               noClick:false
             };
             $SFTools.myToast('登录成功');
+
+            //在文件存储中，将当前登录的账户更新进去
+            $cordovaPreferences.store('loginUser',userid )
+              .success(function(value) {
+                console.log("Success: " + value);
+                $ionicNativeTransitions.stateGo('tab.main', {}, {}, {
+                  "type": "slide",
+                  "direction": "right", // 'left|right|up|down', default 'left' (which is like 'next')
+                  "duration": 200, // in milliseconds (ms), default 400
+                });
+              })
+              .error(function(error) {
+                console.log("Error: " + error);
+                $SFTools.myToast('登录信息同步失败');
+                $scope.loginPage = {
+                  action: '登录',
+                  noClick: false
+                };
+              })
             //登录成功之后，跳转
             $state.go('tab.main');
           }).error(function (error) {
@@ -180,10 +201,14 @@ angular.module('loginControllers',[])
           $SFTools.myToast('注册成功');
           $scope.user.password="";
           $scope.modal_reg.hide();
-          $state.go('login');
+          $ionicNativeTransitions.stateGo('login', {}, {}, {
+            "type": "slide",
+            "direction": "left", // 'left|right|up|down', default 'left' (which is like 'next')
+            "duration": 200, // in milliseconds (ms), default 400
+          });
         }
       }).error(function(){
-        $SFTools.myToast('网络连接错误');
+        $SFTools.myToast(config.userPrompt.ajaxError);
       });
     }
   }]);

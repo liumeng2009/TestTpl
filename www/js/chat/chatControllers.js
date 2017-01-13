@@ -5,7 +5,7 @@
  * Created by Administrator on 2016/6/27.
  */
 angular.module('chatControllers',[])
-  .controller('ChatCtrl',['$scope','$rootScope','$ionicPlatform','$sce','$state','$stateParams','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$ionicScrollDelegate','$usercenterData','$mainData','$cordovaLocalNotification','$SFTools','$cordovaKeyboard','$location',function($scope,$rootScope,$ionicPlatform,$sce,$state,$stateParams,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$ionicScrollDelegate,$usercenterData,$mainData,$cordovaLocalNotification,$SFTools,$cordovaKeyboard,$location){
+  .controller('ChatCtrl',['$scope','$rootScope','$ionicPlatform','$sce','$state','$stateParams','$loginData','$ionicLoading','$ionicPopup','$timeout','$window','$ionicHistory','$ionicScrollDelegate','$usercenterData','$mainData','$cordovaLocalNotification','$SFTools','$cordovaKeyboard','$location','$ionicNativeTransitions',function($scope,$rootScope,$ionicPlatform,$sce,$state,$stateParams,$loginData,$ionicLoading,$ionicPopup,$timeout,$window,$ionicHistory,$ionicScrollDelegate,$usercenterData,$mainData,$cordovaLocalNotification,$SFTools,$cordovaKeyboard,$location,$ionicNativeTransitions){
     var goLogin=function(){
       $state.go('login');
     }
@@ -106,9 +106,7 @@ angular.module('chatControllers',[])
       document.addEventListener('deviceready', function() {
         //从sql读取今天并且没有查看过的所有信息
         var db = null;
-        db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
-        db.executeSql("create table if not exists nosend(id,fromuser,touser,content,status)");
-
+        db = window.sqlitePlugin.openDatabase({name: _token.userid+'.db3', location: 'default'});
         var sqlChatAndNoSend='select * from ( select fromuser,touser,content,createAt,id as status from chat'+
           ' where '+
           ' (fromuser=\''+_token.userid+'\' and touser=\''+touser+'\''
@@ -247,6 +245,9 @@ angular.module('chatControllers',[])
       //send之后，加入retryList
       //各属性描述：   发给谁的  循环次数  用户点击发送的时间  重试倒计时  在视图上的对象实例 一分钟重试一次，如果收到了服务器的回应，说明收到了，就从数组内删除
       // retry的结构是 .touser   .loop     .startTime          .retryTime  viewObject
+      if($scope.send.sendMessage==""||$scope.send.sendMessage.trim()==""){
+        return;
+      }
       console.log('和我聊天的人是：'+$scope.touser._id+$scope.touser.name);
       $SFTools.getToken(function(_token){
         if(_token&&_token.userid&&_token!=''){
@@ -294,6 +295,10 @@ angular.module('chatControllers',[])
           }
           console.log('send的消息是：'+$scope.messages[$scope.messages.length-1].chatlist[$scope.messages[$scope.messages.length-1].chatlist.length-1].mess);
           $scope.send.sendMessage = '';
+          $scope.send.boxHeight=32;
+          $scope.send.boxLineHeight=32;
+          $scope.contentBottom=57;
+          $scope.send.areaPosition='center';
           $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
           $scope.$apply();
           //加入发送超时模块,一分钟没收到反馈，就再次发送，一直循环，持续5次。如果网络恢复，也尝试发送
@@ -312,7 +317,7 @@ angular.module('chatControllers',[])
 
           //将信息存入未发表成功的信息表
           document.addEventListener('deviceready', function() {
-            var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+            var db = window.sqlitePlugin.openDatabase({name: _token.userid+'.db3', location: 'default'});
             // status=1 默认 status=0的时候，说明这条数据发送成功了 id列就是时间
             db.executeSql('create table if not exists nosend(id,fromuser,touser,content,status)');
             db.transaction(function(tx){
@@ -429,7 +434,7 @@ angular.module('chatControllers',[])
         //修改sql
         document.addEventListener('deviceready', function() {
           var db = null;
-          db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+          db = window.sqlitePlugin.openDatabase({name: obj.from+'.db3', location: 'default'});
           db.transaction(function(tx){
             tx.executeSql('update nosend set status=? where id=? and fromuser=? and touser=?',[0,obj.timeid,obj.from,obj.to]);
             var createtime=new Date(obj.message.meta.createAt);
@@ -445,16 +450,20 @@ angular.module('chatControllers',[])
       });
     }
     $scope.goMain=function(){
-      $state.go('tab.main');
+      $ionicNativeTransitions.stateGo('tab.main', {}, {}, {
+        "type": "slide",
+        "direction": "right", // 'left|right|up|down', default 'left' (which is like 'next')
+        "duration": 200, // in milliseconds (ms), default 400
+      });
     }
     $scope.setSaw=function(userid,touser){
       //发送通知，告诉main页面，这些东西看过了。
       document.addEventListener('deviceready', function() {
         var db = null;
-        db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
+        db = window.sqlitePlugin.openDatabase({name: userid+'.db3', location: 'default'});
         //chat全部saw置1   main的saw清0
         db.transaction(function(tx){
-          tx.executeSql('update chat set saw=1 where fromuser=? and touser=? and saw=0',[userid,touser]);
+          tx.executeSql('update chat set saw=1 where fromuser=? and touser=? and saw=0',[touser,userid]);
           tx.executeSql('update main_message set saw=0 where master=? and relation_user_id=?',[userid,touser]);
         },function(error){
         },function(){
@@ -467,7 +476,7 @@ angular.module('chatControllers',[])
 
       $rootScope.$on('ReceiveNoRead',function(event,obj){
         console.log('chat页面收到了服务器同步的信息，同时开始同步chat页面。');
-        $scope.getMessageFromSql(token,$rootScope.touser.userid);
+        $scope.getMessageFromSql(token,$scope.touser.userid);
       });
 
     }
@@ -476,14 +485,37 @@ angular.module('chatControllers',[])
       alert(JSON.stringify(message));
     }
 
-    $scope.send.boxHeight=20;
+    $scope.send.boxHeight=32;
+    $scope.send.boxLineHeight=32;
+    $scope.contentBottom=55;
     $scope.checkHeight=function(){
       $('#testTextWidth').text($scope.send.sendMessage);
       var OutDivheight=$('#testTextWidth').height();
-      var heightIndex=OutDivheight/20===0?1:OutDivheight/20;
-      $scope.send.boxHeight=heightIndex*20;
-      $scope.contentBottom=57+OutDivheight-20;
-      console.log($scope.contentBottom);
-      $ionicScrollDelegate.$getByHandle('chatScroll').scrollBottom();
+      var heightIndex=OutDivheight/20;
+      if(heightIndex<1){
+        $scope.send.boxHeight=32;
+        $scope.send.boxLineHeight=32;
+        $scope.contentBottom=57;
+        $scope.send.areaPosition='center';
+      }
+      else if(heightIndex===1){
+        $scope.send.boxHeight=32;
+        $scope.send.boxLineHeight=32;
+        $scope.contentBottom=57;
+        $scope.send.areaPosition='center';
+      }
+      else if(heightIndex===2){
+        $scope.send.boxHeight=20*heightIndex;
+        $scope.send.boxLineHeight=20;
+        $scope.contentBottom=61;
+        $scope.send.areaPosition='center';
+      }
+      else{
+        $scope.send.boxHeight=20*heightIndex;
+        $scope.send.boxLineHeight=20;
+        $scope.contentBottom=61+20*heightIndex-40;
+        $scope.send.areaPosition='flex-end';
+
+      }
     }
   }]);

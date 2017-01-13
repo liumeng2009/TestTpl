@@ -21,26 +21,34 @@ angular.module('starter.services', ['loginServices','usercenterServices','school
       },
       getToken:function(callback){
         document.addEventListener('deviceready',function() {
-          var db = window.sqlitePlugin.openDatabase({name: 'sfDB.db3', location: 'default'});
-            db.executeSql('SELECT * FROM users where active=1', [], function (rs) {
-              if(rs.rows.length>0){
-                token={
-                  userid: rs.rows.item(0).id,
-                  name: rs.rows.item(0).name,
-                  token: rs.rows.item(0).token,
-                  createAt:rs.rows.item(0).createAt,
-                  image:rs.rows.item(0).image,
-                  deviceid:rs.rows.item(0).deviceId
+          $cordovaPreferences.fetch('loginUser')
+            .success(function(value) {
+              console.log("Success: " + value);
+              var db = window.sqlitePlugin.openDatabase({name: value+'.db3', location: 'default'});
+              db.executeSql('SELECT * FROM users where active=1', [], function (rs) {
+                if(rs.rows.length>0){
+                  token={
+                    userid: rs.rows.item(0).id,
+                    name: rs.rows.item(0).name,
+                    token: rs.rows.item(0).token,
+                    createAt:rs.rows.item(0).createAt,
+                    image:rs.rows.item(0).image,
+                    deviceid:rs.rows.item(0).deviceId
+                  }
+                  callback(token);
                 }
-                callback(token);
-              }
-              else{
+                else{
+                  callback({});
+                }
+              },function(error){
+                console.log(error)
                 callback({});
-              }
-            },function(error){
-              console.log(error)
+              });
+            })
+            .error(function(error) {
+              console.log("Error: " + error);
               callback({});
-            });
+            })
           });
       },
       getStartPage:function(callback){
