@@ -8,8 +8,10 @@
       liumeng
     </author>
     <content src="index.html" />
+    <access origin="http://g151082j77.iok.la" />
     <access origin="*" />
-    <access origin="http://liumeng.iego.cn/*" />
+    <access origin="http://liumeng.iego.cn" />
+
     <preference name="webviewbounce" value="false" />
     <preference name="UIWebViewBounce" value="false" />
     <preference name="DisallowOverscroll" value="true" />
